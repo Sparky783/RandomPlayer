@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RandomFile;
-using RandomFile.Models;
+using RandomPlayer;
+using RandomPlayer.Models;
 
 namespace UnitTests
 {
     [TestClass]
-    public class RandomFileManagerTests
+    public class RandomPlayerManagerTests
     {
         /// <summary>
         /// Spécifie le dossier de test.
@@ -21,7 +21,7 @@ namespace UnitTests
         [TestMethod]
         public void TestConstructor()
         {
-            RandomFileManager manager = new RandomFileManager();
+            RandomPlayerManager manager = new RandomPlayerManager();
 
             Assert.AreEqual("", manager.SelectedFolder);
             Assert.AreEqual(false, manager.UseSubFolders);
@@ -38,7 +38,7 @@ namespace UnitTests
         [TestMethod]
         public void TestConstructorWithParameters()
         {
-            RandomFileManager manager = new RandomFileManager(TEST_FOLDER);
+            RandomPlayerManager manager = new RandomPlayerManager(TEST_FOLDER);
 
             Assert.AreEqual(TEST_FOLDER, manager.SelectedFolder);
             Assert.IsTrue(manager.FileCount > 0);
@@ -50,7 +50,7 @@ namespace UnitTests
         [TestMethod]
         public void TestSuffledFiles()
         {
-            RandomFileManager manager = new RandomFileManager(TEST_FOLDER);
+            RandomPlayerManager manager = new RandomPlayerManager(TEST_FOLDER);
             FileInfo file = manager.NextFile();
 
             for (int i = 1; i < manager.FileCount; i ++)
@@ -75,7 +75,7 @@ namespace UnitTests
         [TestMethod]
         public void TestUniqueNextFile()
         {
-            RandomFileManager manager = new RandomFileManager(TEST_FOLDER);
+            RandomPlayerManager manager = new RandomPlayerManager(TEST_FOLDER);
             List<FileInfo> files = new List<FileInfo>();
 
             for (int i = 0; i < manager.FileCount; i++)
@@ -95,7 +95,7 @@ namespace UnitTests
         [TestMethod]
         public void TestPreviousFile()
         {
-            RandomFileManager manager = new RandomFileManager(TEST_FOLDER);
+            RandomPlayerManager manager = new RandomPlayerManager(TEST_FOLDER);
 
             FileInfo file = null;
             Random rnd = new Random();
@@ -116,7 +116,7 @@ namespace UnitTests
         [TestMethod]
         public void TestFirstPreviousFile()
         {
-            RandomFileManager manager = new RandomFileManager(TEST_FOLDER);
+            RandomPlayerManager manager = new RandomPlayerManager(TEST_FOLDER);
             
             Assert.IsNull(manager.PreviousFile());
             Assert.AreEqual(0, manager.RemainingPreviousFiles);
@@ -128,8 +128,8 @@ namespace UnitTests
         [TestMethod]
         public void TestSuffleFunction()
         {
-            RandomFileManager managerA = new RandomFileManager(TEST_FOLDER);
-            RandomFileManager managerB = new RandomFileManager(TEST_FOLDER);
+            RandomPlayerManager managerA = new RandomPlayerManager(TEST_FOLDER);
+            RandomPlayerManager managerB = new RandomPlayerManager(TEST_FOLDER);
 
             Assert.AreEqual(managerA.FileCount, managerB.FileCount);
 
@@ -151,7 +151,7 @@ namespace UnitTests
         [TestMethod]
         public void TestCurrentFolderOnly()
         {
-            RandomFileManager manager = new RandomFileManager(TEST_FOLDER);
+            RandomPlayerManager manager = new RandomPlayerManager(TEST_FOLDER);
             List<string> expectedList = new List<string> { "1.txt", "2.txt", "3.txt", "4.avi", "5.mp4", "6.wmv", "7.flv", "8.jpg", "9.png", "10.bmp" };
 
             for (int i = 0; i < manager.FileCount; i++)
@@ -167,7 +167,7 @@ namespace UnitTests
         [TestMethod]
         public void TestCurrentFolderAndSubFolder()
         {
-            RandomFileManager manager = new RandomFileManager(TEST_FOLDER);
+            RandomPlayerManager manager = new RandomPlayerManager(TEST_FOLDER);
             manager.UseSubFolders = true;
 
             List<string> expectedList = new List<string> {
@@ -188,7 +188,7 @@ namespace UnitTests
         [TestMethod]
         public void TestSpecificText()
         {
-            RandomFileManager manager = new RandomFileManager(TEST_FOLDER);
+            RandomPlayerManager manager = new RandomPlayerManager(TEST_FOLDER);
             manager.SearchText = "2";
             
             Assert.AreEqual("2.txt", manager.NextFile().Name);
@@ -200,7 +200,7 @@ namespace UnitTests
         [TestMethod]
         public void TestSpecificType()
         {
-            RandomFileManager manager = new RandomFileManager(TEST_FOLDER);
+            RandomPlayerManager manager = new RandomPlayerManager(TEST_FOLDER);
             manager.SelectedType = FileType.Movie;
 
             List<string> expectedList = new List<string> {
