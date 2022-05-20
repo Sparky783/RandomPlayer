@@ -66,7 +66,7 @@
                     <MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding SelectedTheme, Converter={StaticResource ThemeTypeConverter}, ConverterParameter=Dark}" />
                 </MenuItem>
                 <Separator />
-                <MenuItem Header="Quitter" />
+                <MenuItem Header="Quitter" Command="{Binding QuitCommand}" />
             </MenuItem>
         </Menu>
 
@@ -154,7 +154,7 @@
                     <Label Grid.Column="1" Content="{Binding SelectedFile.Name}" Foreground="{DynamicResource ForegroundColor}" />
                 </Grid>
 
-                <ItemsControl Grid.Row="2" ItemsSource="{Binding DetailsControl}" />
+                <ContentControl Grid.Row="2" Padding="10" Content="{Binding DetailsControl}" />
             </Grid>
         </GroupBox>
 

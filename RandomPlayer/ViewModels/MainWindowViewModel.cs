@@ -3,6 +3,7 @@ using NReco.VideoInfo;
 using RandomPlayer.Models;
 using RandomPlayer.Models.Command;
 using RandomPlayer.Models.Theme;
+using RandomPlayer.Views.Controls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,6 +24,13 @@ namespace RandomPlayer.ViewModels
         private RandomPlayerManager _randomFileManager;
         private ApplicationManager _applicationManager;
         private ThemeManager _themeManager;
+        
+        // Load common details controls
+        private UserControl pictureDetailsControl = new PictureDetailsControl();
+        private UserControl movieDetailsControl = new MovieDetailsControl();
+        private UserControl musicDetailsControl = new MusicDetailsControl();
+        private UserControl fileDetailsControl = new FileDetailsControl();
+
 
         public MainWindowViewModel()
         {
@@ -311,6 +319,21 @@ namespace RandomPlayer.ViewModels
             }
         }
 
+        public UserControl detailsControl;
+        public UserControl DetailsControl
+        {
+            get
+            {
+                return detailsControl;
+            }
+
+            set
+            {
+                detailsControl = value;
+                OnPropertyChanged("DetailsControl");
+            }
+        }
+        
         public Metadata fileInfo;
         public Metadata FileInfo
         {
@@ -334,10 +357,10 @@ namespace RandomPlayer.ViewModels
         public ICommand LaunchCommand { get; private set; }
         public ICommand RefreshCommand { get; private set; }
         public ICommand OpenFolderCommand { get; private set; }
-        public ICommand DetailsCommand { get; private set; }
         public ICommand RenameCommand { get; private set; }
         public ICommand DeleteCommand { get; private set; }
         public ICommand PreviousCommand { get; private set; }
+        public ICommand QuitCommand { get; private set; }
 
         /// <summary>
         /// Init all commands for WPF view.
@@ -350,10 +373,10 @@ namespace RandomPlayer.ViewModels
             LaunchCommand = new RelayCommand(x => { Launch(); });
             RefreshCommand = new RelayCommand(x => { Refresh(); });
             OpenFolderCommand = new RelayCommand(x => { OpenFolder(); });
-            DetailsCommand = new RelayCommand(x => { Details(); });
             RenameCommand = new RelayCommand(x => { Rename(); });
             DeleteCommand = new RelayCommand(x => { Delete(); });
             PreviousCommand = new RelayCommand(x => { Previous(); });
+            QuitCommand = new RelayCommand(x => { Quit(); });
         }
         #endregion
 
@@ -461,18 +484,6 @@ namespace RandomPlayer.ViewModels
         }
 
         /// <summary>
-        /// Get details of the file and display them.
-        /// </summary>
-        public void Details()
-        {
-            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
-            {
-                FFProbe ffProbe = new FFProbe();
-                FileInfo = new Metadata(ffProbe.GetMediaInfo(_randomFileManager.CurrentFile.FullName));
-            }
-        }
-
-        /// <summary>
         /// Rename the current file.
         /// </summary>
         public void Rename()
@@ -538,6 +549,38 @@ namespace RandomPlayer.ViewModels
                     Launch();
             }
         }
+
+        /// <summary>
+        /// Close the application
+        /// </summary>
+        public void Quit()
+        {
+            App.Current.Shutdown();
+        }
         #endregion
+
+        /// <summary>
+        /// Get details of the file and display them.
+        /// </summary>
+        private void Details()
+        {
+            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
+            {
+                FFProbe ffProbe = new FFProbe();
+                FileInfo = new Metadata(ffProbe.GetMediaInfo(_randomFileManager.CurrentFile.FullName));
+            }
+
+            // Gest file type
+            string ext = _randomFileManager.CurrentFile.Extension.ToLower();
+
+            if (FileExtentions.Pictures.Contains(ext))
+                DetailsControl = pictureDetailsControl;
+            else if (FileExtentions.Movies.Contains(ext))
+                DetailsControl = movieDetailsControl;
+            else if (FileExtentions.Musics.Contains(ext))
+                DetailsControl = musicDetailsControl;
+            else
+                DetailsControl = fileDetailsControl;
+        }
     }
 }

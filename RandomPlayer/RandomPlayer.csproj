@@ -88,6 +88,7 @@
     </ApplicationDefinition>
     <Compile Include="Models\Application.cs" />
     <Compile Include="Models\ApplicationManager.cs" />
+    <Compile Include="Models\FileExtentions.cs" />
     <Compile Include="Models\FileType.cs" />
     <Compile Include="Models\Metadata.cs" />
     <Compile Include="Models\Theme\ThemeType.cs" />
