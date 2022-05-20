@@ -19,14 +19,14 @@ namespace RandomPlayer.Models
         private bool _useSubFolders;
         private List<FileInfo> _files;     // Liste des fichiers du dossier.
         private int _fileIndex;            // Position du fichier sélectionné dans les fichier du dossier.
-        private List<FileInfo> _prevFiles; // Liste des fichiers ouvert précédement.
+        private List<FileInfo> _filesHistory; // Liste des fichiers ouvert précédement.
 
         #region Constructeur
         public RandomPlayerManager()
         {
             _files = new List<FileInfo>();
-            _fileIndex = -1;
-            _prevFiles = new List<FileInfo>();
+            _fileIndex = 0;
+            _filesHistory = new List<FileInfo>();
 
             SelectedFolder = "";
             UseSubFolders = false;
@@ -37,8 +37,8 @@ namespace RandomPlayer.Models
         public RandomPlayerManager(string folder)
         {
             _files = new List<FileInfo>();
-            _fileIndex = -1;
-            _prevFiles = new List<FileInfo>();
+            _fileIndex = 0;
+            _filesHistory = new List<FileInfo>();
 
             SelectedFolder = folder;
             UseSubFolders = false;
@@ -111,8 +111,8 @@ namespace RandomPlayer.Models
         {
             get
             {
-                if (_files.Count > 0 && _fileIndex >= 0)
-                    return _files[_fileIndex];
+                if (_filesHistory.Count > 0)
+                    return _filesHistory.Last();
 
                 return null;
             }
@@ -131,7 +131,7 @@ namespace RandomPlayer.Models
         /// </summary>
         public int RemainingPreviousFiles
         {
-            get { return _prevFiles.Count; }
+            get { return _filesHistory.Count; }
         }
         #endregion
 
@@ -149,16 +149,17 @@ namespace RandomPlayer.Models
         {
             if (_files.Count > 0)
             {
-                // Save the previous file. Ignor the first launch of this function.
-                if(_fileIndex >= 0)
-                    _prevFiles.Add(_files[_fileIndex]);
-
-                _fileIndex++;
-
                 if (_fileIndex >= _files.Count)
+                {
+                    Shuffle();
                     _fileIndex = 0;
+                }
 
-                return _files[_fileIndex];
+                FileInfo file = _files[_fileIndex];
+                _filesHistory.Add(file);
+                _fileIndex ++;
+
+                return file;
             }
 
             return null;
@@ -170,10 +171,10 @@ namespace RandomPlayer.Models
         /// <returns></returns>
         public FileInfo PreviousFile()
         {
-            if (_prevFiles.Count > 0)
+            if (_filesHistory.Count > 1)
             {
-                _prevFiles.Remove(_prevFiles.Last());
-                return _prevFiles.Last();
+                _filesHistory.Remove(_filesHistory.Last());
+                return _filesHistory.Last();
             }
 
             return null;
@@ -211,15 +212,15 @@ namespace RandomPlayer.Models
                 switch (_selectedType)
                 {
                     case FileType.Picture:
-                        allowedExtensions = new string[] { ".jpg", ".jpeg", ".jpe", ".jfif", ".png", ".gif", ".bmp", ".dib", ".tif", ".tiff" };
+                        allowedExtensions = FileExtentions.Pictures;
                         break;
 
                     case FileType.Movie:
-                        allowedExtensions = new string[] { ".avi", ".mp4", ".mts", ".flv", ".mpg", ".mpeg", ".mov", ".3g2", ".3gp", ".3gp2", ".3gpp", ".amv", ".asf", ".bik", ".drc", ".divx", ".dv", ".f4v", ".gvi", ".gxf", ".m1v", ".m2v", ".m2t", ".m2ts", ".m4v", ".mkv", ".mp2", ".mp2v", ".mp4v", ".mpe" };
+                        allowedExtensions = FileExtentions.Movies;
                         break;
 
                     case FileType.Song:
-                        allowedExtensions = new string[] { ".wmv", ".mp3", ".ogg", ".wma" };
+                        allowedExtensions = FileExtentions.Movies;
                         break;
 
                     default: // FileType.None
@@ -232,7 +233,7 @@ namespace RandomPlayer.Models
                 else
                     _files = dos.GetFiles(pattern, option).Where(file => allowedExtensions.Any(file.Extension.ToLower().EndsWith)).ToList();
 
-                _fileIndex = -1; // Réinitialise la position dans la liste de fichiers.
+                _fileIndex = 0; // Réinitialise la position dans la liste de fichiers.
                 Shuffle();
 
                 // Déclanche l'événement de fin de recherche.
