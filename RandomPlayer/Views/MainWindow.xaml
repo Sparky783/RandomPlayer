@@ -6,6 +6,7 @@
         xmlns:vm="clr-namespace:RandomPlayer.ViewModels"
         xmlns:controls="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
         xmlns:converters="clr-namespace:RandomPlayer.Views.Converters"
+        xmlns:cc="clr-namespace:RandomPlayer.Views.Controls"
         xmlns:mdt="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="Private Player"
@@ -14,35 +15,12 @@
         ResizeMode="CanMinimize"
         Icon="../Ressources/Icon.ico"
         WindowStartupLocation="CenterScreen">
-
+    
     <Window.Resources>
         <vm:MainWindowViewModel x:Key="ViewModel"/>
         <controls:BooleanToVisibilityConverter x:Key="VisibilityConverter" />
         <converters:InverseBooleanConverter x:Key="InvertBooleanConverter" />
-
-        <!-- COLORS -->
-        <!-- Lighter Gray -->
-        <SolidColorBrush x:Key="ColorBrush0" Color="#FF686868" />
-        <!-- Light Gray -->
-        <SolidColorBrush x:Key="ColorBrush1" Color="#FF3F3F46" />
-        <!-- Gray -->
-        <SolidColorBrush x:Key="ColorBrush2" Color="#FF2D2D30" />
-        <!-- Dark Gray -->
-        <SolidColorBrush x:Key="ColorBrush3" Color="#FF1E1E1E" />
-        <!-- Light Blue -->
-        <SolidColorBrush x:Key="ColorBrush4" Color="#FF7AC0FF" />
-        <!-- Blue -->
-        <SolidColorBrush x:Key="ColorBrush5" Color="#FF1A6FF9" />
-        <!-- White -->
-        <SolidColorBrush x:Key="ColorBrush6" Color="#FFF0F0F0" />
-        <!-- Red-->
-        <SolidColorBrush x:Key="ColorBrush7" Color="#FFDD4545" />
-        <!-- Darker Gray -->
-        <SolidColorBrush x:Key="ColorBrush8" Color="#FF040406" />
-        <!-- Blue -->
-        <SolidColorBrush x:Key="ColorBrush9" Color="#FF0079CC" />
-        <!-- DarkBlue -->
-        <SolidColorBrush x:Key="ColorBrush10" Color="#FF0063A5" />
+        <converters:ThemeTypeConverter x:Key="ThemeTypeConverter" />
 
         <!-- BUTTON -->
         <Style x:Key="Button" TargetType="{x:Type Button}">
@@ -71,17 +49,28 @@
         </Style>
     </Window.Resources>
 
-    <Grid DataContext="{StaticResource ViewModel}">
+    <Grid DataContext="{StaticResource ViewModel}" Background="{DynamicResource BackgroundColor}">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/> <!-- 0 -->
             <RowDefinition Height="auto"/> <!-- 1 -->
             <RowDefinition Height="auto"/> <!-- 2 -->
             <RowDefinition Height="auto"/> <!-- 3 -->
-            <RowDefinition Height="1*"/>   <!-- 4 -->
+            <RowDefinition Height="auto"/> <!-- 4 -->
             <RowDefinition Height="auto"/> <!-- 5 -->
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0">
+        <Menu Grid.Row="0">
+            <MenuItem Header="Fichier">
+                <MenuItem Header="Thème">
+                    <MenuItem Header="Light" IsCheckable="True" IsChecked="{Binding SelectedTheme, Converter={StaticResource ThemeTypeConverter}, ConverterParameter=Light}" />
+                    <MenuItem Header="Dark" IsCheckable="True" IsChecked="{Binding SelectedTheme, Converter={StaticResource ThemeTypeConverter}, ConverterParameter=Dark}" />
+                </MenuItem>
+                <Separator />
+                <MenuItem Header="Quitter" />
+            </MenuItem>
+        </Menu>
+
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="1*"/>
@@ -95,7 +84,7 @@
             </Button>
         </Grid>
 
-        <GroupBox Grid.Row="1" Header="Options" Margin="10,0,10,10" Padding="5,0,5,0" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}">
+        <GroupBox Grid.Row="2" Header="Options" Margin="10,0,10,10" Padding="5,0,5,0" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource ForegroundColor}">
             <StackPanel>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -104,14 +93,14 @@
                         <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="Chemin : " />
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="Chemin : " Foreground="{DynamicResource ForegroundColor}" />
                     <TextBox Grid.Column="1" VerticalAlignment="Center" Padding="0 3" Text="{Binding SelectedFolder}" />
                     <Button Grid.Column="2" VerticalAlignment="Center" Padding="10 3" Content="Parcourir" Command="{Binding SelectFolderCommand}" />
                 </Grid>
-                <CheckBox Margin="0,5,0,5" Content="Lancement automatique" IsChecked="{Binding AutoLaunchOption}"/>
-                <CheckBox Margin="0,5,0,5" Content="Rechercher dans les sous-dossiers" IsChecked="True" Command="{Binding SubfolderChangedCommand}" />
+                <CheckBox Margin="0,5,0,5" Content="Lancement automatique" IsChecked="{Binding AutoLaunchOption}" Foreground="{DynamicResource ForegroundColor}"/>
+                <CheckBox Margin="0,5,0,5" Content="Rechercher dans les sous-dossiers" IsChecked="True" Command="{Binding SubfolderChangedCommand}" Foreground="{DynamicResource ForegroundColor}" />
                 <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
-                    <Label Content="Type de fichier :" />
+                    <Label Content="Type de fichier :" Foreground="{DynamicResource ForegroundColor}" />
                     <ComboBox SelectedItem="{Binding SelectedFileType}">
                         <ComboBoxItem x:Name="all" Content="Tous" IsSelected="True" />
                         <ComboBoxItem x:Name="movies" Content="Vidéos"/>
@@ -119,7 +108,7 @@
                         <ComboBoxItem x:Name="songs" Content="Musiques"/>
                     </ComboBox>
 
-                    <Label Content="Programme :" />
+                    <Label Content="Programme :" Foreground="{DynamicResource ForegroundColor}" />
                     <ComboBox ItemsSource="{Binding Path=ApplciationList}" SelectedValue="{Binding SelectedApplication}" DisplayMemberPath="Name">
                     </ComboBox>
                 </StackPanel>
@@ -129,14 +118,14 @@
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Label Grid.Column="0" Content="Recherche :" />
+                    <Label Grid.Column="0" Content="Recherche :" Foreground="{DynamicResource ForegroundColor}" />
                     <TextBox Grid.Column="1" Text="{Binding SearchText, Mode=TwoWay}" VerticalAlignment="Center" Padding="0 3" />
                 </Grid>
 
             </StackPanel>
         </GroupBox>
 
-        <GroupBox Grid.Row="2" Header="Informations" Margin="10,0,10,10">
+        <GroupBox Grid.Row="3" Header="Informations" Margin="10,0,10,10" Foreground="{DynamicResource ForegroundColor}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
@@ -151,8 +140,8 @@
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Label Grid.Column="0" Content="Dossier :" />
-                    <Label Grid.Column="1" Content="{Binding SelectedFile.DirectoryName}" />
+                    <Label Grid.Column="0" Content="Dossier :" Foreground="{DynamicResource ForegroundColor}" />
+                    <Label Grid.Column="1" Content="{Binding SelectedFile.DirectoryName}" Foreground="{DynamicResource ForegroundColor}" />
                 </Grid>
 
                 <Grid Grid.Row="1">
@@ -161,47 +150,15 @@
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Label Grid.Column="0" Content="Fichier :" />
-                    <Label Grid.Column="1" Content="{Binding SelectedFile.Name}" />
+                    <Label Grid.Column="0" Content="Fichier :" Foreground="{DynamicResource ForegroundColor}" />
+                    <Label Grid.Column="1" Content="{Binding SelectedFile.Name}" Foreground="{DynamicResource ForegroundColor}" />
                 </Grid>
 
-                <Grid Grid.Row="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*" />
-                        <ColumnDefinition Width="1*" />
-                    </Grid.ColumnDefinitions>
-                    
-                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <mdt:PackIcon Kind="Clock" VerticalAlignment="Center" Foreground="{StaticResource ColorBrush10}" Width="40" Height="40" />
-                        <Label Content="{Binding FileInfo.Duration}" VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <mdt:PackIcon Kind="MonitorScreenshot" VerticalAlignment="Center" Foreground="{StaticResource ColorBrush10}" Width="40" Height="40" />
-                        <Label Content="{Binding FileInfo.Size}" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Grid>
-
-                <Grid Grid.Row="3">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*" />
-                        <ColumnDefinition Width="1*" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <mdt:PackIcon Kind="Filmstrip" VerticalAlignment="Center" Foreground="{StaticResource ColorBrush10}" Width="40" Height="40"/>
-                        <Label Content="{Binding FileInfo.VideoCodec}" VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <mdt:PackIcon Kind="Music" VerticalAlignment="Center" Foreground="{StaticResource ColorBrush10}" Width="40" Height="40" />
-                        <Label Content="{Binding FileInfo.AudioCodec}" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Grid>
+                <ItemsControl Grid.Row="2" ItemsSource="{Binding DetailsControl}" />
             </Grid>
         </GroupBox>
 
-        <GroupBox Grid.Row="3" Header="Actions" Margin="10,0,10,10" Padding="5" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}">
+        <GroupBox Grid.Row="4" Header="Actions" Margin="10,0,10,10" Padding="5" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource ForegroundColor}">
             <StackPanel>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -226,7 +183,7 @@
             </Grid.ColumnDefinitions>
 
             <ProgressBar Grid.Column="0" Margin="0,0,10,0" Height="10" Visibility="{Binding EnableProgressBar, Converter={StaticResource VisibilityConverter}}" IsIndeterminate="True" VerticalAlignment="Center" />
-            <Label Grid.Column="1" Content="{Binding Files}" VerticalAlignment="Center" />
+            <Label Grid.Column="1" Content="{Binding Files}" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundColor}" />
         </Grid>
     </Grid>
 </Window>

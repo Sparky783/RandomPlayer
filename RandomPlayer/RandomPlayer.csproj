@@ -90,9 +90,24 @@
     <Compile Include="Models\ApplicationManager.cs" />
     <Compile Include="Models\FileType.cs" />
     <Compile Include="Models\Metadata.cs" />
+    <Compile Include="Models\Theme\ThemeType.cs" />
+    <Compile Include="Models\Theme\ThemeManager.cs" />
     <Compile Include="Models\ViewModelNotifier.cs" />
     <Compile Include="Models\RandomFileManager.cs" />
     <Compile Include="Models\RegistryTools.cs" />
+    <Compile Include="Views\Controls\FileDetailsControl.xaml.cs">
+      <DependentUpon>FileDetailsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Controls\MovieDetailsControl.xaml.cs">
+      <DependentUpon>MovieDetailsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Controls\MusicDetailsControl.xaml.cs">
+      <DependentUpon>MusicDetailsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Controls\PictureDetailsControl.xaml.cs">
+      <DependentUpon>PictureDetailsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Converters\ThemeTypeConverter.cs" />
     <Compile Include="Views\Converters\InverseBooleanConverter.cs" />
     <Compile Include="Models\Command\EventArgs.cs" />
     <Compile Include="Models\Command\EventRaiser.cs" />
@@ -100,6 +115,34 @@
     <Compile Include="RenameDialogWindow.xaml.cs">
       <DependentUpon>RenameDialogWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="Views\Dictionaries\CommonDictionary.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Dictionaries\ThemeDark.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Dictionaries\ThemeLight.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Controls\FileDetailsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Controls\MovieDetailsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Controls\MusicDetailsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Controls\PictureDetailsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

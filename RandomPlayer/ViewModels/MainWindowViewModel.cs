@@ -2,6 +2,7 @@
 using NReco.VideoInfo;
 using RandomPlayer.Models;
 using RandomPlayer.Models.Command;
+using RandomPlayer.Models.Theme;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,13 +20,17 @@ namespace RandomPlayer.ViewModels
 {
     public class MainWindowViewModel : ViewModelNotifier
     {
-        private const string WORKING_FOLDER = "RandomPlayerContent";
-
         private RandomPlayerManager _randomFileManager;
         private ApplicationManager _applicationManager;
+        private ThemeManager _themeManager;
 
         public MainWindowViewModel()
         {
+            // Initialize objects
+            _applicationManager = new ApplicationManager();
+            _themeManager = new ThemeManager();
+
+            // Initialize the main code of the application.
             _randomFileManager = new RandomPlayerManager();
             _randomFileManager.StartSearchEvent += (object sender, EventArgs e) => {
                 EnableProgressBar = true;
@@ -35,7 +40,7 @@ namespace RandomPlayer.ViewModels
                 Files = _randomFileManager.FileCount + " fichiers";
             };
             
-            // Défini le dossier de travail par défaut
+            // Define the default working directory
             if(string.IsNullOrEmpty(Properties.Settings.Default.DefaultFolder))
             {
                 Properties.Settings.Default.DefaultFolder = AppDomain.CurrentDomain.BaseDirectory;
@@ -43,24 +48,38 @@ namespace RandomPlayer.ViewModels
             }
             _randomFileManager.SelectedFolder = Properties.Settings.Default.DefaultFolder;
 
-            _applicationManager = new ApplicationManager();
+            _themeManager.ChangeTheme(ThemeManager.ConvertIntToThemeType(Properties.Settings.Default.ThemeType));
 
-            // Default option
+            // Initialize commands for user.
+            InitCommands();
+
+            // Set default options
             SelectedFile = new FileInfo("Aucun dossier n'est sélèctionné.");
             AutoLaunchOption = true;
             SearchSubfolderOption = true;
             PrevButtonEnable = false;
             EnableProgressBar = false;
             Files = "0 fichiers";
-
-            // Création du dossier de travail si celui-ci n'existe pas
-            if (!Directory.Exists(_randomFileManager.SelectedFolder))
-                Directory.CreateDirectory(_randomFileManager.SelectedFolder);
-
-            InitCommands();
         }
 
         #region Properties
+        public ThemeType SelectedTheme
+        {
+            get
+            {
+                return ThemeManager.ConvertIntToThemeType(Properties.Settings.Default.ThemeType);
+            }
+
+            set
+            {
+                // Set and save user preference
+                Properties.Settings.Default.ThemeType = ThemeManager.ConvertThemeTypeToInt(value);
+                Properties.Settings.Default.Save();
+                _themeManager.ChangeTheme(value);
+                OnPropertyChanged("SelectedTheme");
+            }
+        }
+
         public string SelectedFolder
         {
             get
@@ -72,7 +91,9 @@ namespace RandomPlayer.ViewModels
             {
                 if(Directory.Exists(value))
                 {
+                    // Set and save user preference
                     Properties.Settings.Default.DefaultFolder = value;
+                    Properties.Settings.Default.Save();
                     _randomFileManager.SelectedFolder = Properties.Settings.Default.DefaultFolder;
 
                     OnPropertyChanged("SelectedFolder");
@@ -318,6 +339,9 @@ namespace RandomPlayer.ViewModels
         public ICommand DeleteCommand { get; private set; }
         public ICommand PreviousCommand { get; private set; }
 
+        /// <summary>
+        /// Init all commands for WPF view.
+        /// </summary>
         private void InitCommands()
         {
             SelectFolderCommand = new RelayCommand(x => { SelectFolder(); });
@@ -358,7 +382,7 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Random()
         {
-            if (!string.IsNullOrEmpty(WORKING_FOLDER))
+            if (Directory.Exists(SelectedFolder))
             {
                 if (_randomFileManager.FileCount > 0)
                 {
@@ -386,7 +410,7 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Launch()
         {
-            if (!string.IsNullOrEmpty(WORKING_FOLDER) && _randomFileManager.CurrentFile != null)
+            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
             {
                 // Load details
                 Task.Run(() => { Details(); });
@@ -423,7 +447,7 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void OpenFolder()
         {
-            if (!string.IsNullOrEmpty(WORKING_FOLDER) && _randomFileManager.CurrentFile != null)
+            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
             {
                 try
                 {
@@ -441,7 +465,7 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Details()
         {
-            if (!string.IsNullOrEmpty(WORKING_FOLDER) && _randomFileManager.CurrentFile != null)
+            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
             {
                 FFProbe ffProbe = new FFProbe();
                 FileInfo = new Metadata(ffProbe.GetMediaInfo(_randomFileManager.CurrentFile.FullName));
@@ -453,7 +477,7 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Rename()
         {
-            if (!string.IsNullOrEmpty(WORKING_FOLDER) && SelectedFile != null)
+            if (Directory.Exists(SelectedFolder) && SelectedFile != null)
             {
                 RenameDialogWindow rdw = new RenameDialogWindow();
                 rdw.fileName.Text = SelectedFile.Name.Replace(SelectedFile.Extension, "");
@@ -469,10 +493,12 @@ namespace RandomPlayer.ViewModels
             }
         }
 
-        // Remove the current file.
+        /// <summary>
+        /// Remove the current file.
+        /// </summary>
         public void Delete()
         {
-            if (!string.IsNullOrEmpty(WORKING_FOLDER) && _randomFileManager.CurrentFile != null)
+            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
             {
                 MessageBoxResult result = MessageBox.Show("Voulez-vous vraiment supprimer ce fichier ?", "Supprimer le fichier", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
@@ -493,7 +519,9 @@ namespace RandomPlayer.ViewModels
             }
         }
 
-        // Ouvre le fichier précédent
+        /// <summary>
+        /// Launch the previous file
+        /// </summary>
         public void Previous()
         {
             FileInfo file = _randomFileManager.PreviousFile();

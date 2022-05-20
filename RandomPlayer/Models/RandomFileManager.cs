@@ -172,10 +172,8 @@ namespace RandomPlayer.Models
         {
             if (_prevFiles.Count > 0)
             {
-                FileInfo file = _prevFiles.Last();
-                _prevFiles.Remove(file);
-
-                return file;
+                _prevFiles.Remove(_prevFiles.Last());
+                return _prevFiles.Last();
             }
 
             return null;
