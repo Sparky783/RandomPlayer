@@ -11,7 +11,7 @@ namespace RandomPlayer.Models
     /// <summary>
     /// Outil de sélection aléatoire des fichiers d'un dossier.
     /// </summary>
-    public class RandomPlayerManager
+    public class RandomFileManager
     {
         private string _selectedFolder;
         private FileType _selectedType;
@@ -22,7 +22,7 @@ namespace RandomPlayer.Models
         private List<FileInfo> _filesHistory; // Liste des fichiers ouvert précédement.
 
         #region Constructeur
-        public RandomPlayerManager()
+        public RandomFileManager()
         {
             _files = new List<FileInfo>();
             _fileIndex = 0;
@@ -34,7 +34,7 @@ namespace RandomPlayer.Models
             SelectedType = FileType.None;
         }
 
-        public RandomPlayerManager(string folder)
+        public RandomFileManager(string folder)
         {
             _files = new List<FileInfo>();
             _fileIndex = 0;

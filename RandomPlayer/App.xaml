@@ -1,10 +1,15 @@
-﻿<Application x:Class="RandomPlayer.App"
+﻿<Application
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:RandomPlayer"
+             xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2" x:Class="RandomPlayer.App"
              StartupUri="Views/MainWindow.xaml">
-    
+
     <Application.Resources>
-        <ResourceDictionary Source="Views/Dictionaries/CommonDictionary.xaml" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Views/Dictionaries/ThemeLight.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
