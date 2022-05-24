@@ -21,7 +21,7 @@ namespace RandomPlayer.ViewModels
 {
     public class MainWindowViewModel : ViewModelNotifier
     {
-        private RandomPlayerManager _randomFileManager;
+        private RandomFileManager _randomFileManager;
         private ApplicationManager _applicationManager;
         private ThemeManager _themeManager;
         
@@ -39,7 +39,7 @@ namespace RandomPlayer.ViewModels
             _themeManager = new ThemeManager();
 
             // Initialize the main code of the application.
-            _randomFileManager = new RandomPlayerManager();
+            _randomFileManager = new RandomFileManager();
             _randomFileManager.StartSearchEvent += (object sender, EventArgs e) => {
                 EnableProgressBar = true;
             };
@@ -564,23 +564,38 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         private void Details()
         {
+            // Gest file type
+            string ext = _randomFileManager.CurrentFile.Extension.ToLower();
+
+            if (FileExtentions.Pictures.Contains(ext))
+            {
+                MediaDetails();
+                DetailsControl = pictureDetailsControl;
+            }
+            else if (FileExtentions.Movies.Contains(ext))
+            {
+                MediaDetails();
+                DetailsControl = movieDetailsControl;
+            }
+            else if (FileExtentions.Musics.Contains(ext))
+            {
+                MediaDetails();
+                DetailsControl = musicDetailsControl;
+            }
+            else
+                DetailsControl = fileDetailsControl;
+        }
+
+        /// <summary>
+        /// Get details for media file
+        /// </summary>
+        private void MediaDetails()
+        {
             if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
             {
                 FFProbe ffProbe = new FFProbe();
                 FileInfo = new Metadata(ffProbe.GetMediaInfo(_randomFileManager.CurrentFile.FullName));
             }
-
-            // Gest file type
-            string ext = _randomFileManager.CurrentFile.Extension.ToLower();
-
-            if (FileExtentions.Pictures.Contains(ext))
-                DetailsControl = pictureDetailsControl;
-            else if (FileExtentions.Movies.Contains(ext))
-                DetailsControl = movieDetailsControl;
-            else if (FileExtentions.Musics.Contains(ext))
-                DetailsControl = musicDetailsControl;
-            else
-                DetailsControl = fileDetailsControl;
         }
     }
 }
