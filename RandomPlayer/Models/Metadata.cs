@@ -8,6 +8,9 @@ using static NReco.VideoInfo.MediaInfo;
 
 namespace RandomPlayer.Models
 {
+    /// <summary>
+    /// Format file metadata into an object
+    /// </summary>
     public class Metadata
     {
         #region Properties
@@ -41,7 +44,7 @@ namespace RandomPlayer.Models
             }
         }
 
-        public void DisplayMessageBox()
+        private void LogInConsole()
         {
             string message = "";
             message += string.Format("File format: {0}", MediaInfo.FormatName) + "\n";

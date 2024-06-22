@@ -334,18 +334,33 @@ namespace RandomPlayer.ViewModels
             }
         }
         
-        public Metadata fileInfo;
-        public Metadata FileInfo
+        public Metadata fileMetadata;
+        public Metadata FileMetadata
         {
             get
             {
-                return fileInfo;
+                return fileMetadata;
             }
 
             set
             {
-                fileInfo = value;
-                OnPropertyChanged("FileInfo");
+                fileMetadata = value;
+                OnPropertyChanged("FileMetadata");
+            }
+        }
+
+        public string fileSize;
+        public string FileSize
+        {
+            get
+            {
+                return fileSize;
+            }
+
+            set
+            {
+                fileSize = value;
+                OnPropertyChanged("FileSize");
             }
         }
         #endregion
@@ -409,10 +424,14 @@ namespace RandomPlayer.ViewModels
             {
                 if (_randomFileManager.FileCount > 0)
                 {
+                    ClearDetails();
                     SelectedFile = _randomFileManager.NextFile();
 
                     LaunchButtonEnable = true;
                     PrevButtonEnable = true;
+
+                    // Load details
+                    Task.Run(() => { Details(); });
 
                     if (AutoLaunchOption)
                         Launch();
@@ -435,9 +454,6 @@ namespace RandomPlayer.ViewModels
         {
             if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
             {
-                // Load details
-                Task.Run(() => { Details(); });
-
                 try
                 {
                     if(SelectedApplication != null && !string.IsNullOrEmpty(SelectedApplication.Executable))
@@ -545,6 +561,9 @@ namespace RandomPlayer.ViewModels
                 if(_randomFileManager.RemainingPreviousFiles <= 1)
                     PrevButtonEnable = false;
 
+                ClearDetails();
+                Task.Run(() => { Details(); });
+
                 if (AutoLaunchOption)
                     Launch();
             }
@@ -564,6 +583,9 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         private void Details()
         {
+            // Get standard information
+            FileSize = FormatFileSize(_randomFileManager.CurrentFile.Length);
+
             // Gest file type
             string ext = _randomFileManager.CurrentFile.Extension.ToLower();
 
@@ -593,9 +615,40 @@ namespace RandomPlayer.ViewModels
         {
             if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
             {
+                // Get media information
                 FFProbe ffProbe = new FFProbe();
-                FileInfo = new Metadata(ffProbe.GetMediaInfo(_randomFileManager.CurrentFile.FullName));
+                FileMetadata = new Metadata(ffProbe.GetMediaInfo(_randomFileManager.CurrentFile.FullName));
             }
+        }
+
+        /// <summary>
+        /// Clear details information
+        /// </summary>
+        private void ClearDetails()
+        {
+            FileSize = "";
+            FileMetadata = null;
+        }
+
+        /// <summary>
+        /// Convert a file length in byte into string text (Ex: 50 Mo).
+        /// </summary>
+        /// <param name="fileLength"></param>
+        /// <returns></returns>
+        private string FormatFileSize(long fileLength)
+        {
+            string[] sizes = { "o", "Ko", "Mo", "Go", "To", "Po", "Eo" };
+            double len = (double)fileLength;
+            int order = 0;
+
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len = len / 1024;
+            }
+
+            // Adjust the format string to your preferences. For example "{0:0.#}{1}" would show a single decimal place, and no space.
+            return String.Format("{0:0.##} {1}", len, sizes[order]);
         }
     }
 }

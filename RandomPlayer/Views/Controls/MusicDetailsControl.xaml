@@ -14,12 +14,12 @@
 
         <StackPanel Grid.Column="0" Orientation="Horizontal">
             <mdt:PackIcon Kind="Clock" VerticalAlignment="Center" Foreground="{DynamicResource Color.Button1.Static.Background}" Width="40" Height="40" />
-            <Label Content="{Binding FileInfo.Duration}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
+            <Label Content="{Binding FileMetadata.Duration}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
         </StackPanel>
 
         <StackPanel Grid.Column="1" Orientation="Horizontal">
             <mdt:PackIcon Kind="Music" VerticalAlignment="Center" Foreground="{DynamicResource Color.Button1.Static.Background}" Width="40" Height="40" />
-            <Label Content="{Binding FileInfo.AudioCodec}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
+            <Label Content="{Binding FileMetadata.AudioCodec}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
         </StackPanel>
     </Grid>
 </UserControl>

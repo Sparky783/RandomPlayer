@@ -14,12 +14,12 @@
 
         <StackPanel Grid.Column="0" Orientation="Horizontal">
             <mdt:PackIcon Kind="MonitorScreenshot" VerticalAlignment="Center" Foreground="{DynamicResource Color.Button1.Static.Background}" Width="40" Height="40" />
-            <Label Content="{Binding FileInfo.Size}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
+            <Label Content="{Binding FileMetadata.Size}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
         </StackPanel>
 
         <StackPanel Grid.Column="1" Orientation="Horizontal">
             <mdt:PackIcon Kind="Filmstrip" VerticalAlignment="Center" Foreground="{DynamicResource Color.Button1.Static.Background}" Width="40" Height="40"/>
-            <Label Content="{Binding FileInfo.VideoCodec}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
+            <Label Content="{Binding FileMetadata.VideoCodec}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
         </StackPanel>
     </Grid>
 </UserControl>

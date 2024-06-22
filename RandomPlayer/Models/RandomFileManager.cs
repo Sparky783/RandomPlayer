@@ -203,8 +203,21 @@ namespace RandomPlayer.Models
 
                 string pattern = "*";
 
+                // Update search elements
                 if (!string.IsNullOrEmpty(SearchText))
-                    pattern = "*" + SearchText + "*";
+                {
+                    string[] searchElement = SearchText.Split(' ');
+
+                    if(searchElement.Length == 1)
+                        pattern = "*" + SearchText + "*";
+                    else
+                    {
+                        foreach(string element in searchElement)
+                            pattern += "*" + element;
+
+                        pattern += "*";
+                    }
+                } 
 
                 string[] allowedExtensions = new string[] { };
                 bool allFiles = false;
@@ -246,18 +259,18 @@ namespace RandomPlayer.Models
         /// </summary>
         public void Shuffle()
         {
-            if (!string.IsNullOrEmpty(_selectedFolder) && _files.Count > 0)
-            {
-                Random rng = new Random();
-                int tot = _files.Count;
+            if (string.IsNullOrEmpty(_selectedFolder) || _files.Count == 0)
+                return;
 
-                for (int i = 0; i < tot; i++)
-                {
-                    int k = rng.Next(tot);
-                    FileInfo value = _files[k];
-                    _files[k] = _files[i];
-                    _files[i] = value;
-                }
+            Random rng = new Random();
+            int tot = _files.Count;
+
+            for (int i = 0; i < tot; i++)
+            {
+                int k = rng.Next(tot);
+                FileInfo value = _files[k];
+                _files[k] = _files[i];
+                _files[i] = value;
             }
         }
         #endregion

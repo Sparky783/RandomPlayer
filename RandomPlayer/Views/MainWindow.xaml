@@ -343,6 +343,7 @@
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0">
@@ -366,6 +367,11 @@
                 </Grid>
 
                 <ContentControl Grid.Row="2" Padding="10" Content="{Binding DetailsControl}" />
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <mdt:PackIcon Kind="Harddisk" VerticalAlignment="Center" Foreground="{DynamicResource Color.Button1.Static.Background}" Width="40" Height="40" />
+                    <TextBlock Text="{Binding FileSize}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
+                </StackPanel>
             </Grid>
         </GroupBox>
 
