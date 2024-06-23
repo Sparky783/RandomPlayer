@@ -1,0 +1,60 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- COLORS -->
+    <SolidColorBrush x:Key="Color.Text" Color="#FFF0F0F0" />
+    <SolidColorBrush x:Key="Color.Background" Color="#FF2D2D30" />
+
+    <SolidColorBrush x:Key="Color.Button1.Static.Background" Color="#FFA50000" />
+    <SolidColorBrush x:Key="Color.Button1.Static.Text" Color="#FFF0F0F0" />
+    <SolidColorBrush x:Key="Color.Button1.Hover.Background" Color="#FF630000" />
+    <SolidColorBrush x:Key="Color.Button1.Pressed.Background" Color="#FF450000" />
+    <SolidColorBrush x:Key="Color.Button1.Enabled.Background" Color="#FF3F3F46" />
+
+    <SolidColorBrush x:Key="Color.Button2.Static.Background" Color="#FFDDDDDD"/>
+    <SolidColorBrush x:Key="Color.Button2.Static.Border" Color="#FF707070"/>
+    <SolidColorBrush x:Key="Color.Button2.Static.Text" Color="#FF000000" />
+    <SolidColorBrush x:Key="Color.Button2.MouseOver.Background" Color="#FFBEE6FD"/>
+    <SolidColorBrush x:Key="Color.Button2.MouseOver.Border" Color="#FF3C7FB1"/>
+    <SolidColorBrush x:Key="Color.Button2.Pressed.Background" Color="#FFC4E5F6"/>
+    <SolidColorBrush x:Key="Color.Button2.Pressed.Border" Color="#FF2C628B"/>
+    <SolidColorBrush x:Key="Color.Button2.Disabled.Background" Color="#FF3F3F46"/>
+    <SolidColorBrush x:Key="Color.Button2.Disabled.Border" Color="#FFADB2B5"/>
+    <SolidColorBrush x:Key="Color.Button2.Disabled.Foreground" Color="#FF838383"/>
+
+    <SolidColorBrush x:Key="Color.TextBox.Static.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.TextBox.Static.Border" Color="#FFABAdB3"/>
+    <SolidColorBrush x:Key="Color.TextBox.Static.Text" Color="#FFF0F0F0"/>
+    <SolidColorBrush x:Key="Color.TextBox.Hover.Border" Color="#FFCD2E2E"/>
+    <SolidColorBrush x:Key="Color.TextBox.Focus.Border" Color="#FFCD2E2E"/>
+
+    <SolidColorBrush x:Key="Color.ComboBox.Static.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Static.Border" Color="#FFACACAC"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Static.Text" Color="#FFF0F0F0"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Static.Glyph" Color="#FFA50000"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Static.Editable.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Static.Editable.Border" Color="#FFABADB3"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Static.Editable.Button.Background" Color="Transparent"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Static.Editable.Button.Border" Color="Transparent"/>
+    <SolidColorBrush x:Key="Color.ComboBox.MouseOver.Glyph" Color="#FFA50000"/>
+    <SolidColorBrush x:Key="Color.ComboBox.MouseOver.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.MouseOver.Border" Color="#FFCD2E2E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.MouseOver.Editable.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.MouseOver.Editable.Border" Color="#FFCD2E2E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.MouseOver.Editable.Button.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.MouseOver.Editable.Button.Border" Color="Transparent"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Pressed.Glyph" Color="#FFA50000"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Pressed.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Pressed.Border" Color="#FFCD2E2E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Pressed.Editable.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Pressed.Editable.Border" Color="#FFCD2E2E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Pressed.Editable.Button.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Pressed.Editable.Button.Border" Color="Transparent"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Disabled.Glyph" Color="#FFA50000"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Disabled.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Disabled.Border" Color="#FFCD2E2E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Disabled.Editable.Background" Color="#FF1E1E1E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Disabled.Editable.Border" Color="#FFCD2E2E"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Disabled.Editable.Button.Background" Color="Transparent"/>
+    <SolidColorBrush x:Key="Color.ComboBox.Disabled.Editable.Button.Border" Color="Transparent"/>
+</ResourceDictionary>
