@@ -400,7 +400,7 @@
             </Grid.ColumnDefinitions>
 
             <ProgressBar Grid.Column="0" Margin="0,0,10,0" Height="10" Visibility="{Binding EnableProgressBar, Converter={StaticResource VisibilityConverter}}" IsIndeterminate="True" VerticalAlignment="Center" />
-            <Label Grid.Column="1" Content="{Binding Files}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
+            <Label Grid.Column="1" Content="{Binding FilesLabel}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
         </Grid>
     </Grid>
 </Window>

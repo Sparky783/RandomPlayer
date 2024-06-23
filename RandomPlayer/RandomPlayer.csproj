@@ -92,10 +92,11 @@
     <Compile Include="Models\FileExtentions.cs" />
     <Compile Include="Models\FileType.cs" />
     <Compile Include="Models\Metadata.cs" />
+    <Compile Include="Models\FileSearcher.cs" />
+    <Compile Include="Models\RandomManager.cs" />
     <Compile Include="Models\Theme\ThemeType.cs" />
     <Compile Include="Models\Theme\ThemeManager.cs" />
     <Compile Include="Models\ViewModelNotifier.cs" />
-    <Compile Include="Models\RandomFileManager.cs" />
     <Compile Include="Models\RegistryTools.cs" />
     <Compile Include="Views\Controls\FileDetailsControl.xaml.cs">
       <DependentUpon>FileDetailsControl.xaml</DependentUpon>

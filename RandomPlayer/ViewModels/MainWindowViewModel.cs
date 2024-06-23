@@ -21,7 +21,8 @@ namespace RandomPlayer.ViewModels
 {
     public class MainWindowViewModel : ViewModelNotifier
     {
-        private RandomFileManager _randomFileManager;
+        private RandomManager<FileInfo> _randomManager;
+        private FileSearcher _fileSearcher;
         private ApplicationManager _applicationManager;
         private ThemeManager _themeManager;
         
@@ -37,15 +38,17 @@ namespace RandomPlayer.ViewModels
             // Initialize objects
             _applicationManager = new ApplicationManager();
             _themeManager = new ThemeManager();
+            _randomManager = new RandomManager<FileInfo>();
 
-            // Initialize the main code of the application.
-            _randomFileManager = new RandomFileManager();
-            _randomFileManager.StartSearchEvent += (object sender, EventArgs e) => {
+            // Initialize events for the file research.
+            _fileSearcher = new FileSearcher();
+            _fileSearcher.StartSearchEvent += (object sender, EventArgs e) => {
                 EnableProgressBar = true;
             };
-            _randomFileManager.FinishSearchEvent += (object sender, EventArgs e) => {
+            _fileSearcher.FinishSearchEvent += (object sender, EventArgs e) => {
                 EnableProgressBar = false;
-                Files = _randomFileManager.FileCount + " fichiers";
+                _randomManager.List = _fileSearcher.FileList;
+                FilesLabel = _fileSearcher.Count + " fichiers";
             };
             
             // Define the default working directory
@@ -54,8 +57,8 @@ namespace RandomPlayer.ViewModels
                 Properties.Settings.Default.DefaultFolder = AppDomain.CurrentDomain.BaseDirectory;
                 Properties.Settings.Default.Save();
             }
-            _randomFileManager.SelectedFolder = Properties.Settings.Default.DefaultFolder;
 
+            _fileSearcher.SelectedFolder = Properties.Settings.Default.DefaultFolder;
             _themeManager.ChangeTheme(ThemeManager.ConvertIntToThemeType(Properties.Settings.Default.ThemeType));
 
             // Initialize commands for user.
@@ -67,7 +70,7 @@ namespace RandomPlayer.ViewModels
             SearchSubfolderOption = true;
             PrevButtonEnable = false;
             EnableProgressBar = false;
-            Files = "0 fichiers";
+            FilesLabel = "0 fichiers";
         }
 
         #region Properties
@@ -92,7 +95,7 @@ namespace RandomPlayer.ViewModels
         {
             get
             {
-                return _randomFileManager.SelectedFolder;
+                return _fileSearcher.SelectedFolder;
             }
 
             set
@@ -102,7 +105,7 @@ namespace RandomPlayer.ViewModels
                     // Set and save user preference
                     Properties.Settings.Default.DefaultFolder = value;
                     Properties.Settings.Default.Save();
-                    _randomFileManager.SelectedFolder = Properties.Settings.Default.DefaultFolder;
+                    _fileSearcher.SelectedFolder = Properties.Settings.Default.DefaultFolder;
 
                     OnPropertyChanged("SelectedFolder");
                 }
@@ -128,7 +131,7 @@ namespace RandomPlayer.ViewModels
         {
             get
             {
-                switch (_randomFileManager.SelectedType)
+                switch (_fileSearcher.SelectedType)
                 {
                     case FileType.None:
                         return new ComboBoxItem() { Name = "all" };
@@ -152,22 +155,22 @@ namespace RandomPlayer.ViewModels
                 switch (value.Name)
                 {
                     case "all":
-                        _randomFileManager.SelectedType = FileType.None;
+                        _fileSearcher.SelectedType = FileType.None;
                         ApplciationList = _applicationManager.DefaultApplicationList;
                         break;
 
                     case "movies":
-                        _randomFileManager.SelectedType = FileType.Movie;
+                        _fileSearcher.SelectedType = FileType.Movie;
                         ApplciationList = _applicationManager.MovieApplicationList;
                         break;
 
                     case "pictures":
-                        _randomFileManager.SelectedType = FileType.Picture;
+                        _fileSearcher.SelectedType = FileType.Picture;
                         ApplciationList = _applicationManager.PictureApplicationList;
                         break;
 
                     case "songs":
-                        _randomFileManager.SelectedType = FileType.Song;
+                        _fileSearcher.SelectedType = FileType.Song;
                         ApplciationList = _applicationManager.MusicApplicationList;
                         break;
 
@@ -260,12 +263,12 @@ namespace RandomPlayer.ViewModels
         {
             get
             {
-                return _randomFileManager.UseSubFolders;
+                return _fileSearcher.UseSubFolders;
             }
 
             set
             {
-                _randomFileManager.UseSubFolders = value;
+                _fileSearcher.UseSubFolders = value;
                 OnPropertyChanged("SearchSubfolderOption");
             }
         }
@@ -283,7 +286,7 @@ namespace RandomPlayer.ViewModels
                 if (value != searchText)
                 {
                     searchText = value;
-                    _randomFileManager.SearchText = value;
+                    _fileSearcher.SearchText = value;
                     OnPropertyChanged("SearchText");
                 }
             }
@@ -305,7 +308,7 @@ namespace RandomPlayer.ViewModels
         }
 
         public string files;
-        public string Files
+        public string FilesLabel
         {
             get
             {
@@ -315,7 +318,7 @@ namespace RandomPlayer.ViewModels
             set
             {
                 files = value;
-                OnPropertyChanged("Files");
+                OnPropertyChanged("FilesLabel");
             }
         }
 
@@ -361,6 +364,14 @@ namespace RandomPlayer.ViewModels
             {
                 fileSize = value;
                 OnPropertyChanged("FileSize");
+            }
+        }
+
+        private FileInfo CurrentFile
+        {
+            get
+            {
+                return _randomManager.Current;
             }
         }
         #endregion
@@ -412,7 +423,7 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void SubfolderChanged()
         {
-            _randomFileManager.Refresh();
+            _randomManager.Refresh();
         }
 
         /// <summary>
@@ -422,10 +433,10 @@ namespace RandomPlayer.ViewModels
         {
             if (Directory.Exists(SelectedFolder))
             {
-                if (_randomFileManager.FileCount > 0)
+                if (_randomManager.Count > 0)
                 {
                     ClearDetails();
-                    SelectedFile = _randomFileManager.NextFile();
+                    SelectedFile = _randomManager.Next();
 
                     LaunchButtonEnable = true;
                     PrevButtonEnable = true;
@@ -452,18 +463,18 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Launch()
         {
-            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
+            if (Directory.Exists(SelectedFolder) && CurrentFile != null)
             {
                 try
                 {
                     if(SelectedApplication != null && !string.IsNullOrEmpty(SelectedApplication.Executable))
                     {
                         string progamPath = RegistryTools.GetPathForExe(SelectedApplication.Executable);
-                        Process.Start(progamPath, "\"" + _randomFileManager.CurrentFile.FullName + "\"");
+                        Process.Start(progamPath, "\"" + CurrentFile.FullName + "\"");
                     }
                     else
                     {
-                        Process.Start(_randomFileManager.CurrentFile.FullName);
+                        Process.Start(CurrentFile.FullName);
                     }
                 }
                 catch (Exception e)
@@ -478,7 +489,7 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         private void Refresh()
         {
-            _randomFileManager.Refresh();
+            _fileSearcher.Search();
         }
 
         /// <summary>
@@ -486,11 +497,11 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void OpenFolder()
         {
-            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
+            if (Directory.Exists(SelectedFolder) && CurrentFile != null)
             {
                 try
                 {
-                    Process.Start(_randomFileManager.CurrentFile.DirectoryName);
+                    Process.Start(CurrentFile.DirectoryName);
                 }
                 catch (Exception e)
                 {
@@ -525,7 +536,7 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Delete()
         {
-            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
+            if (Directory.Exists(SelectedFolder) && CurrentFile != null)
             {
                 MessageBoxResult result = MessageBox.Show("Voulez-vous vraiment supprimer ce fichier ?", "Supprimer le fichier", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
@@ -533,8 +544,8 @@ namespace RandomPlayer.ViewModels
                 {
                     try
                     {
-                        File.Delete(_randomFileManager.CurrentFile.FullName);
-                        _randomFileManager.Refresh();
+                        File.Delete(CurrentFile.FullName);
+                        _randomManager.Refresh();
                         SelectedFile = new FileInfo("Aucun dossier n'est sélèctionné.");
                         LaunchButtonEnable = false;
                     }
@@ -551,14 +562,14 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Previous()
         {
-            FileInfo file = _randomFileManager.PreviousFile();
+            FileInfo file = _randomManager.Previous();
             if (file != null)
             {
                 SelectedFile = file;
 
                 LaunchButtonEnable = true;
 
-                if(_randomFileManager.RemainingPreviousFiles <= 1)
+                if(_randomManager.HistoryCount <= 1)
                     PrevButtonEnable = false;
 
                 ClearDetails();
@@ -584,10 +595,10 @@ namespace RandomPlayer.ViewModels
         private void Details()
         {
             // Get standard information
-            FileSize = FormatFileSize(_randomFileManager.CurrentFile.Length);
+            FileSize = FormatFileSize(CurrentFile.Length);
 
             // Gest file type
-            string ext = _randomFileManager.CurrentFile.Extension.ToLower();
+            string ext = CurrentFile.Extension.ToLower();
 
             if (FileExtentions.Pictures.Contains(ext))
             {
@@ -613,11 +624,11 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         private void MediaDetails()
         {
-            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
+            if (Directory.Exists(SelectedFolder) && CurrentFile != null)
             {
                 // Get media information
                 FFProbe ffProbe = new FFProbe();
-                FileMetadata = new Metadata(ffProbe.GetMediaInfo(_randomFileManager.CurrentFile.FullName));
+                FileMetadata = new Metadata(ffProbe.GetMediaInfo(CurrentFile.FullName));
             }
         }
 

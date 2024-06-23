@@ -9,24 +9,20 @@ using System.Threading.Tasks;
 namespace RandomPlayer.Models
 {
     /// <summary>
-    /// Outil de sélection aléatoire des fichiers d'un dossier.
+    /// Tool to search files.
     /// </summary>
-    public class RandomFileManager
+    public class FileSearcher
     {
         private string _selectedFolder;
         private FileType _selectedType;
         private string _searchText;
         private bool _useSubFolders;
-        private List<FileInfo> _files;     // Liste des fichiers du dossier.
-        private int _fileIndex;            // Position du fichier sélectionné dans les fichier du dossier.
-        private List<FileInfo> _filesHistory; // Liste des fichiers ouvert précédement.
+        private List<FileInfo> _files;
 
         #region Constructeur
-        public RandomFileManager()
+        public FileSearcher()
         {
             _files = new List<FileInfo>();
-            _fileIndex = 0;
-            _filesHistory = new List<FileInfo>();
 
             SelectedFolder = "";
             UseSubFolders = false;
@@ -34,11 +30,9 @@ namespace RandomPlayer.Models
             SelectedType = FileType.None;
         }
 
-        public RandomFileManager(string folder)
+        public FileSearcher(string folder)
         {
             _files = new List<FileInfo>();
-            _fileIndex = 0;
-            _filesHistory = new List<FileInfo>();
 
             SelectedFolder = folder;
             UseSubFolders = false;
@@ -49,7 +43,15 @@ namespace RandomPlayer.Models
 
         #region Properties
         /// <summary>
-        /// Retourne le dossier en cours
+        /// Get the file list
+        /// </summary>
+        public List<FileInfo> FileList
+        {
+            get { return _files; }
+        }
+
+        /// <summary>
+        /// Get the selected folder
         /// </summary>
         public string SelectedFolder
         {
@@ -58,12 +60,12 @@ namespace RandomPlayer.Models
             set
             {
                 _selectedFolder = value;
-                Refresh();
+                Search();
             }
         }
 
         /// <summary>
-        /// Set ou retourne si les sous-dossier doivent être utilisés.
+        /// Get or define if the subfolders must be browsed.
         /// </summary>
         public bool UseSubFolders
         {
@@ -72,12 +74,12 @@ namespace RandomPlayer.Models
             set
             {
                 _useSubFolders = value;
-                Refresh();
+                Search();
             }
         }
 
         /// <summary>
-        /// Type de fichier sélectionné.
+        /// Type of file to find.
         /// </summary>
         public FileType SelectedType
         {
@@ -86,12 +88,12 @@ namespace RandomPlayer.Models
             set
             {
                 _selectedType = value;
-                Refresh();
+                Search();
             }
         }
 
         /// <summary>
-        /// Selctionne les fichiers correspondant à la chaine de caractères de recherche.
+        /// Text must be find in files names.
         /// </summary>
         public string SearchText
         {
@@ -100,38 +102,16 @@ namespace RandomPlayer.Models
             set
             {
                 _searchText = value;
-                Refresh();
+                Search();
             }
         }
 
         /// <summary>
-        /// Retourne le fichier en cours.
+        /// Get the number of files found.
         /// </summary>
-        public FileInfo CurrentFile
-        {
-            get
-            {
-                if (_filesHistory.Count > 0)
-                    return _filesHistory.Last();
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Retroune le nombre de fichier correspondant au critères.
-        /// </summary>
-        public int FileCount
+        public int Count
         {
             get { return _files.Count; }
-        }
-
-        /// <summary>
-        /// Retroune le nombre de fichier parcourru. Le fichier en cours étant exclus.
-        /// </summary>
-        public int RemainingPreviousFiles
-        {
-            get { return _filesHistory.Count; }
         }
         #endregion
 
@@ -142,48 +122,9 @@ namespace RandomPlayer.Models
 
         #region Methods
         /// <summary>
-        /// Retourne le fichier suivant.
+        /// Run the search process.
         /// </summary>
-        /// <returns></returns>
-        public FileInfo NextFile()
-        {
-            if (_files.Count > 0)
-            {
-                if (_fileIndex >= _files.Count)
-                {
-                    Shuffle();
-                    _fileIndex = 0;
-                }
-
-                FileInfo file = _files[_fileIndex];
-                _filesHistory.Add(file);
-                _fileIndex ++;
-
-                return file;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Retourne le fichier précédent.
-        /// </summary>
-        /// <returns></returns>
-        public FileInfo PreviousFile()
-        {
-            if (_filesHistory.Count > 1)
-            {
-                _filesHistory.Remove(_filesHistory.Last());
-                return _filesHistory.Last();
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Récupère tous les fichiers correspondant aux critères de recherche de l'utilisateur et les mélanges.
-        /// </summary>
-        public void Refresh()
+        public void Search()
         {
             _files = new List<FileInfo>();
 
@@ -191,9 +132,9 @@ namespace RandomPlayer.Models
                 return;
 
             if (!Directory.Exists(_selectedFolder))
-                return;
+                throw new InvalidOperationException("A folder path must be exist.");
 
-            // Déclanche l'événement de début de recherche.
+            // Triger start search event
             StartSearchEvent?.Invoke(null, null);
 
             new Task(() => {
@@ -246,32 +187,9 @@ namespace RandomPlayer.Models
                 else
                     _files = dos.GetFiles(pattern, option).Where(file => allowedExtensions.Any(file.Extension.ToLower().EndsWith)).ToList();
 
-                _fileIndex = 0; // Réinitialise la position dans la liste de fichiers.
-                Shuffle();
-
-                // Déclanche l'événement de fin de recherche.
+                // Triger the end search event.
                 FinishSearchEvent?.Invoke(null, null);
             }).Start();
-        }
-
-        /// <summary>
-        /// Mélange le dossier en cours.
-        /// </summary>
-        public void Shuffle()
-        {
-            if (string.IsNullOrEmpty(_selectedFolder) || _files.Count == 0)
-                return;
-
-            Random rng = new Random();
-            int tot = _files.Count;
-
-            for (int i = 0; i < tot; i++)
-            {
-                int k = rng.Next(tot);
-                FileInfo value = _files[k];
-                _files[k] = _files[i];
-                _files[i] = value;
-            }
         }
         #endregion
     }
