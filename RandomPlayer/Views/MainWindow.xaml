@@ -83,6 +83,30 @@
             </Setter>
         </Style>
 
+        <!-- GROUPBOX -->
+        <Style x:Key="GroupBox" TargetType="{x:Type GroupBox}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="GroupBox">
+                        <Grid Margin="0,9,0,0">
+                            <Border BorderBrush="{DynamicResource Color.GroupBox.Border}" BorderThickness="1" CornerRadius="3">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Border BorderBrush="Transparent" Background="{DynamicResource Color.Background}" HorizontalAlignment="Left" Margin="6,-9,0,0" Padding="2,0">
+                                        <ContentPresenter ContentSource="Header" />
+                                    </Border>
+                                    <ContentPresenter Grid.Row="1" Margin="10,0,10,10" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- TEXTBOX -->
         <Style x:Key="TextBox" TargetType="{x:Type TextBox}">
             <Setter Property="Background" Value="{DynamicResource Color.TextBox.Static.Background}"/>
@@ -296,7 +320,7 @@
             </Button>
         </Grid>
 
-        <GroupBox Grid.Row="2" Header="Options" Margin="10,0,10,10" Padding="5,0,5,0" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}">
+        <GroupBox Grid.Row="2" Header="Options" Margin="10,7,10,10" Padding="5,0,5,0" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
             <StackPanel>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -309,8 +333,10 @@
                     <TextBox Grid.Column="1" VerticalAlignment="Center" Padding="0 3" Text="{Binding SelectedFolder}" Style="{StaticResource TextBox}" />
                     <Button Grid.Column="2" VerticalAlignment="Center" Padding="10 3" Content="Parcourir" Command="{Binding SelectFolderCommand}" Style="{DynamicResource Button2}" />
                 </Grid>
+                
                 <CheckBox Margin="0,5,0,5" Content="Lancement automatique" IsChecked="{Binding AutoLaunchOption}" Foreground="{DynamicResource Color.Text}"/>
                 <CheckBox Margin="0,5,0,5" Content="Rechercher dans les sous-dossiers" IsChecked="True" Command="{Binding SubfolderChangedCommand}" Foreground="{DynamicResource Color.Text}" />
+                
                 <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
                     <Label Content="Type de fichier :" Foreground="{DynamicResource Color.Text}" />
                     <ComboBox SelectedItem="{Binding SelectedFileType}" Style="{DynamicResource ComboBox}">
@@ -323,6 +349,7 @@
                     <Label Content="Programme :" Foreground="{DynamicResource Color.Text}" />
                     <ComboBox ItemsSource="{Binding ApplciationList}" SelectedValue="{Binding SelectedApplication}" DisplayMemberPath="Name" Style="{DynamicResource ComboBox}"/>
                 </StackPanel>
+                
                 <Grid Margin="0,5,0,5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto"/>
@@ -332,11 +359,10 @@
                     <Label Grid.Column="0" Content="Recherche :" Foreground="{DynamicResource Color.Text}" />
                     <TextBox Grid.Column="1" Text="{Binding SearchText, Mode=TwoWay}" VerticalAlignment="Center" Padding="0 3" Style="{StaticResource TextBox}" />
                 </Grid>
-
             </StackPanel>
         </GroupBox>
 
-        <GroupBox Grid.Row="3" Header="Informations" Margin="10,0,10,10" Foreground="{DynamicResource Color.Text}">
+        <GroupBox Grid.Row="3" Header="Informations" Margin="10,0,10,10" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
@@ -375,8 +401,8 @@
             </Grid>
         </GroupBox>
 
-        <GroupBox Grid.Row="4" Header="Actions" Margin="10,0,10,10" Padding="5" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}">
-            <StackPanel>
+        <GroupBox Grid.Row="4" Header="Actions" Margin="10,0,10,10" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
+            <StackPanel Margin="5">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*"/>

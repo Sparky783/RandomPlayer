@@ -28,6 +28,8 @@
     <SolidColorBrush x:Key="Color.TextBox.Hover.Border" Color="#FFCD2E2E"/>
     <SolidColorBrush x:Key="Color.TextBox.Focus.Border" Color="#FFCD2E2E"/>
 
+    <SolidColorBrush x:Key="Color.GroupBox.Border" Color="#FFD9D9D9"/>
+
     <SolidColorBrush x:Key="Color.ComboBox.Static.Background" Color="#FF1E1E1E"/>
     <SolidColorBrush x:Key="Color.ComboBox.Static.Border" Color="#FFACACAC"/>
     <SolidColorBrush x:Key="Color.ComboBox.Static.Text" Color="#FFF0F0F0"/>
