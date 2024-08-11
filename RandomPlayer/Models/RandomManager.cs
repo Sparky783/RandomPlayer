@@ -103,8 +103,10 @@ namespace RandomPlayer.Models
         /// <returns>Previous element</returns>
         public T Previous()
         {
-            if (_elementsHistory.Count == 0)
+            if (_elementIndex == 0)
                 throw new InvalidOperationException("The history list is empty.");
+
+            _elementIndex--;
 
             T element = _elementsHistory.Last();
             _elementsHistory.Remove(element);

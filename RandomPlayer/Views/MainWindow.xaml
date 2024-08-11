@@ -313,7 +313,7 @@
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Column="0" Content="Random" Padding="10" Command="{Binding RandomCommand}" Style="{StaticResource Button1}" />
+            <Button Grid.Column="0" Content="Suivant" Padding="10" Command="{Binding RandomCommand}" Style="{StaticResource Button1}" />
             <Button Grid.Column="1" Content="Lancer" Padding="10" IsEnabled="{Binding LaunchButtonEnable}" Command="{Binding LaunchCommand}" Style="{StaticResource Button1}" />
             <Button Grid.Column="2" Padding="10" Command="{Binding RefreshCommand}" Style="{StaticResource Button1}">
                 <mdt:PackIcon Kind="Refresh" />
