@@ -98,6 +98,7 @@
     <Compile Include="Models\Theme\ThemeManager.cs" />
     <Compile Include="Models\ViewModelNotifier.cs" />
     <Compile Include="Models\RegistryTools.cs" />
+    <Compile Include="ViewModels\SelectFoldersWindowViewModel.cs" />
     <Compile Include="Views\Controls\FileDetailsControl.xaml.cs">
       <DependentUpon>FileDetailsControl.xaml</DependentUpon>
     </Compile>
@@ -118,6 +119,13 @@
     <Compile Include="RenameDialogWindow.xaml.cs">
       <DependentUpon>RenameDialogWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\SelectFoldersWindow.xaml.cs">
+      <DependentUpon>SelectFoldersWindow.xaml</DependentUpon>
+    </Compile>
+    <Page Include="Views\Dictionaries\StylesDictionary.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\Dictionaries\ThemeDark.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -155,6 +163,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="RenameDialogWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SelectFoldersWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

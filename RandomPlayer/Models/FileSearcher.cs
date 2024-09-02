@@ -132,7 +132,10 @@ namespace RandomPlayer.Models
                 return;
 
             if (!Directory.Exists(_selectedFolder))
-                throw new InvalidOperationException("A folder path must be exist.");
+            {
+                return;
+                //throw new InvalidOperationException("A folder path must be exist.");
+            }
 
             // Triger start search event
             StartSearchEvent?.Invoke(null, null);
