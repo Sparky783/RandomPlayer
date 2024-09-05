@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace RandomPlayer.Models
 {
@@ -13,7 +14,7 @@ namespace RandomPlayer.Models
     /// </summary>
     public class FileSearcher
     {
-        private string _selectedFolder;
+        private List<string> _sourceFolders;
         private FileType _selectedType;
         private string _searchText;
         private bool _useSubFolders;
@@ -23,8 +24,8 @@ namespace RandomPlayer.Models
         public FileSearcher()
         {
             _files = new List<FileInfo>();
+            _sourceFolders = new List<string>();
 
-            SelectedFolder = "";
             UseSubFolders = false;
             SearchText = "";
             SelectedType = FileType.None;
@@ -33,8 +34,8 @@ namespace RandomPlayer.Models
         public FileSearcher(string folder)
         {
             _files = new List<FileInfo>();
+            _sourceFolders = new List<string>();
 
-            SelectedFolder = folder;
             UseSubFolders = false;
             SearchText = "";
             SelectedType = FileType.None;
@@ -51,17 +52,25 @@ namespace RandomPlayer.Models
         }
 
         /// <summary>
-        /// Get the selected folder
+        /// Folder sources where the search must be made.
         /// </summary>
-        public string SelectedFolder
+        public List<string> SourceFolders
         {
-            get { return _selectedFolder; }
+            get { return _sourceFolders; }
 
             set
             {
-                _selectedFolder = value;
+                _sourceFolders = value;
                 Search();
             }
+        }
+
+        /// <summary>
+        /// Folder sources where the search must be made.
+        /// </summary>
+        public bool IsUniqueSource
+        {
+            get { return _sourceFolders.Count == 1; }
         }
 
         /// <summary>
@@ -122,73 +131,109 @@ namespace RandomPlayer.Models
 
         #region Methods
         /// <summary>
+        /// Set the source folder for an unique source
+        /// </summary>
+        /// <param name="folder"></param>
+        public void SetSourceFolder(string folder)
+        {
+            _sourceFolders.Clear();
+            _sourceFolders.Add(folder);
+        }
+
+        /// <summary>
+        /// Set the source folder for multiple sources
+        /// </summary>
+        /// <param name="folder"></param>
+        public void AddSourceFolder(string folder)
+        {
+            _sourceFolders.Add(folder);
+        }
+
+        /// <summary>
         /// Run the search process.
         /// </summary>
         public void Search()
         {
-            _files = new List<FileInfo>();
-
-            if (string.IsNullOrEmpty(_selectedFolder))
+            if (_sourceFolders.Count <= 0)
                 return;
 
-            if (!Directory.Exists(_selectedFolder))
+            // Prepare search settings
+            SearchOption option = UseSubFolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+            string pattern = "*";
+
+            // Update search elements
+            if (!string.IsNullOrEmpty(SearchText))
             {
-                return;
-                //throw new InvalidOperationException("A folder path must be exist.");
+                string[] searchElement = SearchText.Split(' ');
+
+                if (searchElement.Length == 1)
+                    pattern = "*" + SearchText + "*";
+                else
+                {
+                    foreach (string element in searchElement)
+                        pattern += "*" + element;
+
+                    pattern += "*";
+                }
             }
 
-            // Triger start search event
-            StartSearchEvent?.Invoke(null, null);
+            string[] allowedExtensions = new string[] { };
+            bool allFiles = false;
 
-            new Task(() => {
-                DirectoryInfo dos = new DirectoryInfo(_selectedFolder);
+            switch (_selectedType)
+            {
+                case FileType.Picture:
+                    allowedExtensions = FileExtentions.Pictures;
+                    break;
 
-                SearchOption option = UseSubFolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                case FileType.Movie:
+                    allowedExtensions = FileExtentions.Movies;
+                    break;
 
-                string pattern = "*";
+                case FileType.Song:
+                    allowedExtensions = FileExtentions.Movies;
+                    break;
 
-                // Update search elements
-                if (!string.IsNullOrEmpty(SearchText))
+                default: // FileType.None
+                    allFiles = true;
+                    break;
+            }
+
+            List<Task<List<FileInfo>>> tasks = new List<Task<List<FileInfo>>>();
+
+            // Make a new task for each source folder where a search must be made 
+            foreach (string folder in _sourceFolders)
+            {
+                if (!Directory.Exists(folder))
                 {
-                    string[] searchElement = SearchText.Split(' ');
-
-                    if(searchElement.Length == 1)
-                        pattern = "*" + SearchText + "*";
-                    else
-                    {
-                        foreach(string element in searchElement)
-                            pattern += "*" + element;
-
-                        pattern += "*";
-                    }
-                } 
-
-                string[] allowedExtensions = new string[] { };
-                bool allFiles = false;
-
-                switch (_selectedType)
-                {
-                    case FileType.Picture:
-                        allowedExtensions = FileExtentions.Pictures;
-                        break;
-
-                    case FileType.Movie:
-                        allowedExtensions = FileExtentions.Movies;
-                        break;
-
-                    case FileType.Song:
-                        allowedExtensions = FileExtentions.Movies;
-                        break;
-
-                    default: // FileType.None
-                        allFiles = true;
-                        break;
+                    return;
+                    //throw new InvalidOperationException("A folder path must be exist.");
                 }
 
-                if (allFiles)
-                    _files = dos.GetFiles(pattern, option).ToList();
-                else
-                    _files = dos.GetFiles(pattern, option).Where(file => allowedExtensions.Any(file.Extension.ToLower().EndsWith)).ToList();
+                tasks.Add(Task.Run(() => {
+                    DirectoryInfo dos = new DirectoryInfo(folder);
+                    List<FileInfo> fileFound = new List<FileInfo>();
+
+                    if (allFiles)
+                        fileFound = dos.GetFiles(pattern, option).ToList();
+                    else
+                        fileFound = dos.GetFiles(pattern, option).Where(file => allowedExtensions.Any(file.Extension.ToLower().EndsWith)).ToList();
+
+                    return fileFound;
+                }));
+            }
+
+            new Task(async () => {
+                // Triger start search event
+                StartSearchEvent?.Invoke(null, null);
+
+                // Attend que toutes les tâches soient terminées
+                List<FileInfo>[] results = await Task.WhenAll(tasks);
+
+                _files = new List<FileInfo>();
+
+                foreach (List<FileInfo> fileList in results)
+                    _files.AddRange(fileList);
 
                 // Triger the end search event.
                 FinishSearchEvent?.Invoke(null, null);

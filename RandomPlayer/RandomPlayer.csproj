@@ -94,6 +94,7 @@
     <Compile Include="Models\Metadata.cs" />
     <Compile Include="Models\FileSearcher.cs" />
     <Compile Include="Models\RandomManager.cs" />
+    <Compile Include="Models\SaveTool.cs" />
     <Compile Include="Models\Theme\ThemeType.cs" />
     <Compile Include="Models\Theme\ThemeManager.cs" />
     <Compile Include="Models\ViewModelNotifier.cs" />

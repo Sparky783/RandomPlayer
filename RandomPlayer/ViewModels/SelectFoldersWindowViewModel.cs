@@ -6,6 +6,7 @@ using RandomPlayer.Models.Theme;
 using RandomPlayer.Views.Controls;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -14,23 +15,27 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 
 namespace RandomPlayer.ViewModels
 {
     public class SelectFoldersWindowViewModel : ViewModelNotifier
     {
-        private List<string> _selectedFolders;
+        private ObservableCollection<string> _selectedFolders;
 
 
         public SelectFoldersWindowViewModel()
         {
             // Initialize commands for user.
             InitCommands();
+
+            SelectedFolders = new ObservableCollection<string>(SaveTool.GetSelectedFolders());
         }
 
         #region Properties
-        public List<string> SelectedFolders
+        public ObservableCollection<string> SelectedFolders
         {
             get
             {
@@ -47,6 +52,7 @@ namespace RandomPlayer.ViewModels
 
         #region Commands
         public ICommand AddFolderCommand { get; private set; }
+        public ICommand RemoveFolderCommand { get; private set; }
         public ICommand FinishCommand { get; private set; }
 
         /// <summary>
@@ -55,19 +61,30 @@ namespace RandomPlayer.ViewModels
         private void InitCommands()
         {
             AddFolderCommand = new RelayCommand(x => { AddFolder(); });
-            FinishCommand = new RelayCommand(x => { Close(); });
+            RemoveFolderCommand = new RelayCommand(x => { RemoveFolder(x); });
+            FinishCommand = new RelayCommand(x => { });
         }
         #endregion
 
         #region Button methods
         private void AddFolder()
         {
+            System.Windows.Forms.FolderBrowserDialog ofd = new System.Windows.Forms.FolderBrowserDialog();
 
+            if(ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                SelectedFolders.Add(ofd.SelectedPath);
+                SaveTool.SetSelectedFolders(SelectedFolders.ToList());
+            }
         }
 
-        private void Close()
+        private void RemoveFolder(object parameter)
         {
-
+            if (parameter is string item)
+            {
+                SelectedFolders.Remove(item);
+                SaveTool.SetSelectedFolders(SelectedFolders.ToList());
+            }
         }
         #endregion
     }

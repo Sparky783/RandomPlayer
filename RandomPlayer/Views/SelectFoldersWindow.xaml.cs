@@ -29,5 +29,11 @@ namespace RandomPlayer.Views
         {
             get { return (SelectFoldersWindowViewModel)Resources["ViewModel"]; }
         }
+
+        private void ButtonClose_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = true;
+            Hide();
+        }
     }
 }

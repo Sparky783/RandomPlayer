@@ -3,6 +3,7 @@ using NReco.VideoInfo;
 using RandomPlayer.Models;
 using RandomPlayer.Models.Command;
 using RandomPlayer.Models.Theme;
+using RandomPlayer.Views;
 using RandomPlayer.Views.Controls;
 using System;
 using System.Collections.Generic;
@@ -50,22 +51,15 @@ namespace RandomPlayer.ViewModels
                 _randomManager.List = _fileSearcher.FileList;
                 FilesLabel = _fileSearcher.Count + " fichiers";
             };
-            
-            // Define the default working directory
-            if(string.IsNullOrEmpty(Properties.Settings.Default.DefaultFolder))
-            {
-                Properties.Settings.Default.DefaultFolder = AppDomain.CurrentDomain.BaseDirectory;
-                Properties.Settings.Default.Save();
-            }
 
-            _fileSearcher.SelectedFolder = Properties.Settings.Default.DefaultFolder;
+            //_fileSearcher.SelectedFolder = Properties.Settings.Default.DefaultFolder; // TODO
             _themeManager.ChangeTheme(ThemeManager.ConvertIntToThemeType(Properties.Settings.Default.ThemeType));
 
             // Initialize commands for user.
             InitCommands();
 
             // Set default options
-            SelectedFile = new FileInfo("Aucun dossier n'est sélèctionné.");
+            CurrentFile = new FileInfo("Aucun dossier n'est sélèctionné.");
             AutoLaunchOption = true;
             SearchSubfolderOption = true;
             PrevButtonEnable = false;
@@ -91,39 +85,26 @@ namespace RandomPlayer.ViewModels
             }
         }
 
-        public string SelectedFolder
+        public int NumberOfFolders
         {
             get
             {
-                return _fileSearcher.SelectedFolder;
-            }
-
-            set
-            {
-                if(Directory.Exists(value))
-                {
-                    // Set and save user preference
-                    Properties.Settings.Default.DefaultFolder = value;
-                    Properties.Settings.Default.Save();
-                    _fileSearcher.SelectedFolder = Properties.Settings.Default.DefaultFolder;
-
-                    OnPropertyChanged("SelectedFolder");
-                }
+                return _fileSearcher.SourceFolders.Count;
             }
         }
 
-        private FileInfo _selectedFile;
-        public FileInfo SelectedFile
+        private FileInfo _currentFile;
+        public FileInfo CurrentFile
         {
             get
             {
-                return _selectedFile;
+                return _currentFile;
             }
 
             set
             {
-                _selectedFile = value;
-                OnPropertyChanged("SelectedFile");
+                _currentFile = value;
+                OnPropertyChanged("CurrentFile");
             }
         }
 
@@ -366,18 +347,10 @@ namespace RandomPlayer.ViewModels
                 OnPropertyChanged("FileSize");
             }
         }
-
-        private FileInfo CurrentFile
-        {
-            get
-            {
-                return _randomManager.Current;
-            }
-        }
         #endregion
 
         #region Commands
-        public ICommand SelectFolderCommand { get; private set; }
+        public ICommand SelectFoldersCommand { get; private set; }
         public ICommand SubfolderChangedCommand { get; private set; }
         public ICommand RandomCommand { get; private set; }
         public ICommand LaunchCommand { get; private set; }
@@ -393,7 +366,7 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         private void InitCommands()
         {
-            SelectFolderCommand = new RelayCommand(x => { SelectFolder(); });
+            SelectFoldersCommand = new RelayCommand(x => { SelectFolders(); });
             SubfolderChangedCommand = new RelayCommand(x => { SubfolderChanged(); });
             RandomCommand = new RelayCommand(x => { Random(); });
             LaunchCommand = new RelayCommand(x => { Launch(); });
@@ -410,12 +383,15 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Open a folder dialog to choose the working directory.
         /// </summary>
-        public void SelectFolder()
+        public void SelectFolders()
         {
-            System.Windows.Forms.FolderBrowserDialog ofd = new System.Windows.Forms.FolderBrowserDialog();
+            SelectFoldersWindow sfw = new SelectFoldersWindow();
 
-            if(ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                SelectedFolder = ofd.SelectedPath;
+            if(sfw.ShowDialog() == true)
+            {
+                _fileSearcher.SourceFolders = SaveTool.GetSelectedFolders();
+                OnPropertyChanged("NumberOfFolders");
+            }
         }
 
         /// <summary>
@@ -431,12 +407,12 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Random()
         {
-            if (Directory.Exists(SelectedFolder))
+            if (CheckSelectedFolders())
             {
                 if (_randomManager.Count > 0)
                 {
                     ClearDetails();
-                    SelectedFile = _randomManager.Next();
+                    CurrentFile = _randomManager.Next();
 
                     LaunchButtonEnable = true;
                     PrevButtonEnable = true;
@@ -454,7 +430,7 @@ namespace RandomPlayer.ViewModels
             }
             else
             {
-                SelectedFile = new FileInfo("Aucun dossier n'est sélèctionné.");
+                CurrentFile = new FileInfo("Aucun dossier n'est sélèctionné.");
             }
         }
 
@@ -463,24 +439,24 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Launch()
         {
-            if (Directory.Exists(SelectedFolder) && CurrentFile != null)
+            if (!CheckSelectedFolders() || CurrentFile == null)
+                return;
+
+            try
             {
-                try
+                if(SelectedApplication != null && !string.IsNullOrEmpty(SelectedApplication.Executable))
                 {
-                    if(SelectedApplication != null && !string.IsNullOrEmpty(SelectedApplication.Executable))
-                    {
-                        string progamPath = RegistryTools.GetPathForExe(SelectedApplication.Executable);
-                        Process.Start(progamPath, "\"" + CurrentFile.FullName + "\"");
-                    }
-                    else
-                    {
-                        Process.Start(CurrentFile.FullName);
-                    }
+                    string progamPath = RegistryTools.GetPathForExe(SelectedApplication.Executable);
+                    Process.Start(progamPath, "\"" + CurrentFile.FullName + "\"");
                 }
-                catch (Exception e)
+                else
                 {
-                    MessageBox.Show("Une erreur est survenue lors du lancement du fichier : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Process.Start(CurrentFile.FullName);
                 }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Une erreur est survenue lors du lancement du fichier : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -497,16 +473,16 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void OpenFolder()
         {
-            if (Directory.Exists(SelectedFolder) && CurrentFile != null)
+            if (!CheckSelectedFolders() || CurrentFile == null)
+                return;
+
+            try
             {
-                try
-                {
-                    Process.Start(CurrentFile.DirectoryName);
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Une erreur est survenue lors du l'ouverture du dossier : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                Process.Start(CurrentFile.DirectoryName);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Une erreur est survenue lors du l'ouverture du dossier : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -515,20 +491,20 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Rename()
         {
-            if (Directory.Exists(SelectedFolder) && SelectedFile != null)
+            if (!CheckSelectedFolders() || CurrentFile == null)
+                return;
+
+            RenameDialogWindow rdw = new RenameDialogWindow();
+            rdw.fileName.Text = CurrentFile.Name.Replace(CurrentFile.Extension, "");
+            Nullable<bool> result = rdw.ShowDialog();
+
+            if(result == true)
             {
-                RenameDialogWindow rdw = new RenameDialogWindow();
-                rdw.fileName.Text = SelectedFile.Name.Replace(SelectedFile.Extension, "");
-                Nullable<bool> result = rdw.ShowDialog();
-
-                if(result == true)
-                {
-                    string newName = rdw.fileName.Text + SelectedFile.Extension;
-                    SelectedFile.MoveTo(Path.Combine(SelectedFile.DirectoryName, newName));
-                }
-
-                rdw.Close();
+                string newName = rdw.fileName.Text + CurrentFile.Extension;
+                CurrentFile.MoveTo(Path.Combine(CurrentFile.DirectoryName, newName));
             }
+
+            rdw.Close();
         }
 
         /// <summary>
@@ -536,24 +512,24 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Delete()
         {
-            if (Directory.Exists(SelectedFolder) && CurrentFile != null)
-            {
-                MessageBoxResult result = MessageBox.Show("Voulez-vous vraiment supprimer ce fichier ?", "Supprimer le fichier", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (!CheckSelectedFolders() || CurrentFile == null)
+                return;
 
-                if(result == MessageBoxResult.Yes)
-                {
-                    try
-                    {
-                        File.Delete(CurrentFile.FullName);
-                        _randomManager.Refresh();
-                        SelectedFile = new FileInfo("Aucun dossier n'est sélèctionné.");
-                        LaunchButtonEnable = false;
-                    }
-                    catch (Exception e)
-                    {
-                        MessageBox.Show("Une erreur est survenue : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
+            MessageBoxResult result = MessageBox.Show("Voulez-vous vraiment supprimer ce fichier ?", "Supprimer le fichier", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+            
+            try
+            {
+                File.Delete(CurrentFile.FullName);
+                _randomManager.Refresh();
+                CurrentFile = new FileInfo("Aucun dossier n'est sélèctionné.");
+                LaunchButtonEnable = false;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Une erreur est survenue : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -565,7 +541,7 @@ namespace RandomPlayer.ViewModels
             FileInfo file = _randomManager.Previous();
             if (file != null)
             {
-                SelectedFile = file;
+                CurrentFile = file;
 
                 LaunchButtonEnable = true;
 
@@ -616,7 +592,9 @@ namespace RandomPlayer.ViewModels
                 DetailsControl = musicDetailsControl;
             }
             else
+            {
                 DetailsControl = fileDetailsControl;
+            }
         }
 
         /// <summary>
@@ -624,12 +602,12 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         private void MediaDetails()
         {
-            if (Directory.Exists(SelectedFolder) && CurrentFile != null)
-            {
-                // Get media information
-                FFProbe ffProbe = new FFProbe();
-                FileMetadata = new Metadata(ffProbe.GetMediaInfo(CurrentFile.FullName));
-            }
+            if (!CheckSelectedFolders() || CurrentFile == null)
+                return;
+            
+            // Get media information
+            FFProbe ffProbe = new FFProbe();
+            FileMetadata = new Metadata(ffProbe.GetMediaInfo(CurrentFile.FullName));
         }
 
         /// <summary>
@@ -660,6 +638,20 @@ namespace RandomPlayer.ViewModels
 
             // Adjust the format string to your preferences. For example "{0:0.#}{1}" would show a single decimal place, and no space.
             return String.Format("{0:0.##} {1}", len, sizes[order]);
+        }
+
+        private bool CheckSelectedFolders()
+        {
+            if (_fileSearcher.SourceFolders.Count <= 0)
+                return false;
+
+            foreach (string folder in _fileSearcher.SourceFolders)
+            {
+                if (!Directory.Exists(folder))
+                    return false;
+            }
+
+            return true;
         }
     }
 }

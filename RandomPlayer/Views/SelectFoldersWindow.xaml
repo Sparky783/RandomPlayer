@@ -18,9 +18,21 @@
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
-        <DataGrid Grid.Row="0" ItemsSource="{Binding SelectedFolders}" Margin="10,10,10,0">
-            
-        </DataGrid>
+        <ListBox Grid.Row="0" ItemsSource="{Binding SelectedFolders}" Margin="10,10,10,0" HorizontalContentAlignment="Stretch">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="{Binding}" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Content="Supprimer" VerticalAlignment="Center" Command="{Binding RemoveFolderCommand, Source={StaticResource ViewModel}}" CommandParameter="{Binding}" Style="{StaticResource Button1}" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
         <Grid Grid.Row="1" Margin="10">
             <Grid.ColumnDefinitions>
@@ -30,7 +42,7 @@
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0" Command="{Binding AddFolderCommand}" Style="{StaticResource Button1}">Ajouter</Button>
-            <Button Grid.Column="2" Command="{Binding FinishCommand}" Style="{StaticResource Button1}">Terminer</Button>
+            <Button Grid.Column="2" Style="{StaticResource Button1}" Click="ButtonClose_Click">Terminer</Button>
         </Grid>
     </Grid>
 </Window>

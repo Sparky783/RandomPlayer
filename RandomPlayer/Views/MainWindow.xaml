@@ -66,18 +66,8 @@
 
         <GroupBox Grid.Row="2" Header="Options" Margin="10,7,10,10" Padding="5,0,5,0" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
             <StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto" />
-                        <ColumnDefinition Width="1*" />
-                        <ColumnDefinition Width="auto" />
-                    </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" VerticalAlignment="Center" Padding="10 3" Margin="0,5" Content="Selectionner les dossiers" Command="{Binding SelectFoldersCommand}" Style="{DynamicResource Button1}" />
 
-                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="Chemin : " Foreground="{DynamicResource Color.Text}" />
-                    <TextBox Grid.Column="1" VerticalAlignment="Center" Padding="0 3" Text="{Binding SelectedFolder}" Style="{StaticResource TextBox}" />
-                    <Button Grid.Column="2" VerticalAlignment="Center" Padding="10 3" Content="Parcourir" Command="{Binding SelectFolderCommand}" Style="{DynamicResource Button2}" />
-                </Grid>
-                
                 <CheckBox Margin="0,5,0,5" Content="Lancement automatique" IsChecked="{Binding AutoLaunchOption}" Foreground="{DynamicResource Color.Text}"/>
                 <CheckBox Margin="0,5,0,5" Content="Rechercher dans les sous-dossiers" IsChecked="True" Command="{Binding SubfolderChangedCommand}" Foreground="{DynamicResource Color.Text}" />
                 
