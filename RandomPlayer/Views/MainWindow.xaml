@@ -113,7 +113,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Label Grid.Column="0" Content="Dossier :" Foreground="{DynamicResource Color.Text}" />
-                    <Label Grid.Column="1" Content="{Binding SelectedFile.DirectoryName}" Foreground="{DynamicResource Color.Text}" />
+                    <Label Grid.Column="1" Content="{Binding CurrentFile.DirectoryName}" Foreground="{DynamicResource Color.Text}" />
                 </Grid>
 
                 <Grid Grid.Row="1">
@@ -123,7 +123,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Label Grid.Column="0" Content="Fichier :" Foreground="{DynamicResource Color.Text}" />
-                    <Label Grid.Column="1" Content="{Binding SelectedFile.Name}" Foreground="{DynamicResource Color.Text}" />
+                    <Label Grid.Column="1" Content="{Binding CurrentFile.Name}" Foreground="{DynamicResource Color.Text}" />
                 </Grid>
 
                 <ContentControl Grid.Row="2" Padding="10" Content="{Binding DetailsControl}" />

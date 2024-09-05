@@ -52,7 +52,14 @@ namespace RandomPlayer.ViewModels
                 FilesLabel = _fileSearcher.Count + " fichiers";
             };
 
-            //_fileSearcher.SelectedFolder = Properties.Settings.Default.DefaultFolder; // TODO
+            List<string> savedFolders = SaveTool.GetSelectedFolders();
+
+            if (savedFolders.Count > 0)
+            {
+                _fileSearcher.SourceFolders = savedFolders;
+                OnPropertyChanged("NumberOfFolders");
+            }
+
             _themeManager.ChangeTheme(ThemeManager.ConvertIntToThemeType(Properties.Settings.Default.ThemeType));
 
             // Initialize commands for user.
