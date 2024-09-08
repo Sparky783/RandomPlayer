@@ -46,5 +46,17 @@ namespace RandomPlayer.Properties {
                 this["ThemeType"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SelectedType {
+            get {
+                return ((string)(this["SelectedType"]));
+            }
+            set {
+                this["SelectedType"] = value;
+            }
+        }
     }
 }

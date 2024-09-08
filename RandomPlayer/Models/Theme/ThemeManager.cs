@@ -17,6 +17,9 @@ namespace RandomPlayer.Models.Theme
         public ThemeManager()
         {
             // Initialize theme manager
+            ResourceDictionary defaultTheme = App.Current.Resources.MergedDictionaries[0];
+            App.Current.Resources.MergedDictionaries.Remove(defaultTheme);
+
             App.Current.Resources.MergedDictionaries.Add(this);
             InitThemes();
 

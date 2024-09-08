@@ -191,7 +191,7 @@ namespace RandomPlayer.Models
                     break;
 
                 case FileType.Song:
-                    allowedExtensions = FileExtentions.Movies;
+                    allowedExtensions = FileExtentions.Musics;
                     break;
 
                 default: // FileType.None

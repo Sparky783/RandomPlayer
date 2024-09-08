@@ -10,7 +10,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <t:ThemeManager />
+                <ResourceDictionary Source="Views/Dictionaries/ThemeLight.xaml" />
                 <ResourceDictionary Source="Views/Dictionaries/StylesDictionary.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

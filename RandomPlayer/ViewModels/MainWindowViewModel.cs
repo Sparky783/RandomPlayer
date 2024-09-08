@@ -7,6 +7,7 @@ using RandomPlayer.Views;
 using RandomPlayer.Views.Controls;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -26,12 +27,14 @@ namespace RandomPlayer.ViewModels
         private FileSearcher _fileSearcher;
         private ApplicationManager _applicationManager;
         private ThemeManager _themeManager;
-        
+
         // Load common details controls
         private UserControl pictureDetailsControl = new PictureDetailsControl();
         private UserControl movieDetailsControl = new MovieDetailsControl();
         private UserControl musicDetailsControl = new MusicDetailsControl();
         private UserControl fileDetailsControl = new FileDetailsControl();
+
+        public ObservableCollection<FileTypeOption> FileTypeOptions { get; set; }
 
 
         public MainWindowViewModel()
@@ -40,6 +43,15 @@ namespace RandomPlayer.ViewModels
             _applicationManager = new ApplicationManager();
             _themeManager = new ThemeManager();
             _randomManager = new RandomManager<FileInfo>();
+            _selectedFolders = new ObservableCollection<string>();
+
+            FileTypeOptions = new ObservableCollection<FileTypeOption>
+            {
+                new FileTypeOption { Key = "all", Display = "Tous" },
+                new FileTypeOption { Key = "movies", Display = "Vidéos" },
+                new FileTypeOption { Key = "pictures", Display = "Photos" },
+                new FileTypeOption { Key = "songs", Display = "Musiques" }
+            };
 
             // Initialize events for the file research.
             _fileSearcher = new FileSearcher();
@@ -52,15 +64,21 @@ namespace RandomPlayer.ViewModels
                 FilesLabel = _fileSearcher.Count + " fichiers";
             };
 
+            // Load saved selected folders
             List<string> savedFolders = SaveTool.GetSelectedFolders();
 
             if (savedFolders.Count > 0)
             {
+                SelectedFolders = new ObservableCollection<string>(savedFolders);
                 _fileSearcher.SourceFolders = savedFolders;
-                OnPropertyChanged("NumberOfFolders");
             }
 
+            // Load saved theme
             _themeManager.ChangeTheme(ThemeManager.ConvertIntToThemeType(Properties.Settings.Default.ThemeType));
+
+            // Load saved file type
+            if(!string.IsNullOrEmpty(Properties.Settings.Default.SelectedType))
+                SelectedFileType = Properties.Settings.Default.SelectedType;
 
             // Initialize commands for user.
             InitCommands();
@@ -72,9 +90,13 @@ namespace RandomPlayer.ViewModels
             PrevButtonEnable = false;
             EnableProgressBar = false;
             FilesLabel = "0 fichiers";
+
         }
 
         #region Properties
+        /// <summary>
+        /// Theme to display
+        /// </summary>
         public ThemeType SelectedTheme
         {
             get
@@ -84,22 +106,37 @@ namespace RandomPlayer.ViewModels
 
             set
             {
-                // Set and save user preference
+                // Save user preference
                 Properties.Settings.Default.ThemeType = ThemeManager.ConvertThemeTypeToInt(value);
                 Properties.Settings.Default.Save();
+
+                // Set theme to display it
                 _themeManager.ChangeTheme(value);
                 OnPropertyChanged("SelectedTheme");
             }
         }
 
-        public int NumberOfFolders
+        /// <summary>
+        /// List of folder used to search files
+        /// </summary>
+        private ObservableCollection<string> _selectedFolders;
+        public ObservableCollection<string> SelectedFolders
         {
             get
             {
-                return _fileSearcher.SourceFolders.Count;
+                return _selectedFolders;
+            }
+
+            set
+            {
+                _selectedFolders = value;
+                OnPropertyChanged("SelectedFolders");
             }
         }
 
+        /// <summary>
+        /// Current file opened/displayed
+        /// </summary>
         private FileInfo _currentFile;
         public FileInfo CurrentFile
         {
@@ -115,23 +152,26 @@ namespace RandomPlayer.ViewModels
             }
         }
 
-        public ComboBoxItem SelectedFileType
+        /// <summary>
+        /// Type of file to searche
+        /// </summary>
+        public string SelectedFileType
         {
             get
             {
                 switch (_fileSearcher.SelectedType)
                 {
                     case FileType.None:
-                        return new ComboBoxItem() { Name = "all" };
+                        return "all";
 
                     case FileType.Movie:
-                        return new ComboBoxItem() { Name = "movies" };
+                        return "movies";
 
                     case FileType.Picture:
-                        return new ComboBoxItem() { Name = "pictures" };
+                        return "pictures";
 
                     case FileType.Song:
-                        return new ComboBoxItem() { Name = "songs" };
+                        return "songs";
 
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -140,7 +180,7 @@ namespace RandomPlayer.ViewModels
 
             set
             {
-                switch (value.Name)
+                 switch (value)
                 {
                     case "all":
                         _fileSearcher.SelectedType = FileType.None;
@@ -166,12 +206,17 @@ namespace RandomPlayer.ViewModels
                         throw new ArgumentOutOfRangeException();
                 }
 
-                SelectedApplication = ApplciationList[0];
+                Properties.Settings.Default.SelectedType = value;
+                Properties.Settings.Default.Save();
 
+                SelectedApplication = ApplciationList[0];
                 OnPropertyChanged("SelectedFileType");
             }
         }
 
+        /// <summary>
+        /// List of application can be used to open the current file
+        /// </summary>
         private List<Application> applicationList;
         public List<Application> ApplciationList
         {
@@ -187,6 +232,9 @@ namespace RandomPlayer.ViewModels
             }
         }
 
+        /// <summary>
+        /// Selected application can be used to open the current file
+        /// </summary>
         private Application selectedApplication;
         public Application SelectedApplication
         {
@@ -357,7 +405,6 @@ namespace RandomPlayer.ViewModels
         #endregion
 
         #region Commands
-        public ICommand SelectFoldersCommand { get; private set; }
         public ICommand SubfolderChangedCommand { get; private set; }
         public ICommand RandomCommand { get; private set; }
         public ICommand LaunchCommand { get; private set; }
@@ -367,13 +414,14 @@ namespace RandomPlayer.ViewModels
         public ICommand DeleteCommand { get; private set; }
         public ICommand PreviousCommand { get; private set; }
         public ICommand QuitCommand { get; private set; }
+        public ICommand AddFolderCommand { get; private set; }
+        public ICommand RemoveFolderCommand { get; private set; }
 
         /// <summary>
         /// Init all commands for WPF view.
         /// </summary>
         private void InitCommands()
         {
-            SelectFoldersCommand = new RelayCommand(x => { SelectFolders(); });
             SubfolderChangedCommand = new RelayCommand(x => { SubfolderChanged(); });
             RandomCommand = new RelayCommand(x => { Random(); });
             LaunchCommand = new RelayCommand(x => { Launch(); });
@@ -383,21 +431,40 @@ namespace RandomPlayer.ViewModels
             DeleteCommand = new RelayCommand(x => { Delete(); });
             PreviousCommand = new RelayCommand(x => { Previous(); });
             QuitCommand = new RelayCommand(x => { Quit(); });
+            AddFolderCommand = new RelayCommand(x => { AddFolder(); });
+            RemoveFolderCommand = new RelayCommand(x => { RemoveFolder(x); });
         }
         #endregion
 
         #region Button methods
         /// <summary>
-        /// Open a folder dialog to choose the working directory.
+        /// Add a folder to the search list
         /// </summary>
-        public void SelectFolders()
+        private void AddFolder()
         {
-            SelectFoldersWindow sfw = new SelectFoldersWindow();
+            System.Windows.Forms.FolderBrowserDialog fbd = new System.Windows.Forms.FolderBrowserDialog();
 
-            if(sfw.ShowDialog() == true)
+            if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                _fileSearcher.SourceFolders = SaveTool.GetSelectedFolders();
-                OnPropertyChanged("NumberOfFolders");
+                SelectedFolders.Add(fbd.SelectedPath);
+
+                SaveTool.SetSelectedFolders(SelectedFolders.ToList());
+                _fileSearcher.SourceFolders = SelectedFolders.ToList();
+            }
+        }
+
+        /// <summary>
+        /// Remove folder from the search list
+        /// </summary>
+        /// <param name="parameter"></param>
+        private void RemoveFolder(object parameter)
+        {
+            if (parameter is string item)
+            {
+                SelectedFolders.Remove(item);
+
+                SaveTool.SetSelectedFolders(SelectedFolders.ToList());
+                _fileSearcher.SourceFolders = SelectedFolders.ToList();
             }
         }
 

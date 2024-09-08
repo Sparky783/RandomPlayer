@@ -10,11 +10,10 @@
         x:Class="RandomPlayer.Views.MainWindow"
         mc:Ignorable="d"
         Title="Random Player"
-        Width="500"
         SizeToContent="Height"
         ResizeMode="CanMinimize"
         Icon="../Ressources/Icon.ico"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen" Height="572" Width="861">
 
     <Window.Resources>
         <vm:MainWindowViewModel x:Key="ViewModel"/>
@@ -25,18 +24,9 @@
 
     <Grid DataContext="{StaticResource ViewModel}" Background="{DynamicResource Color.Background}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <!-- 0 -->
-            <RowDefinition Height="auto"/>
-            <!-- 1 -->
-            <RowDefinition Height="auto"/>
-            <!-- 2 -->
-            <RowDefinition Height="auto"/>
-            <!-- 3 -->
-            <RowDefinition Height="auto"/>
-            <!-- 4 -->
-            <RowDefinition Height="auto"/>
-            <!-- 5 -->
+            <RowDefinition Height="auto"/> <!-- 0 -->
+            <RowDefinition Height="1*"/> <!-- 1 -->
+            <RowDefinition Height="auto"/> <!-- 2 -->
         </Grid.RowDefinitions>
 
         <Menu Grid.Row="0">
@@ -53,105 +43,139 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Column="0" Content="Suivant" Padding="10" Command="{Binding RandomCommand}" Style="{StaticResource Button1}" />
-            <Button Grid.Column="1" Content="Lancer" Padding="10" IsEnabled="{Binding LaunchButtonEnable}" Command="{Binding LaunchCommand}" Style="{StaticResource Button1}" />
-            <Button Grid.Column="2" Padding="10" Command="{Binding RefreshCommand}" Style="{StaticResource Button1}">
-                <mdt:PackIcon Kind="Refresh" />
-            </Button>
-        </Grid>
-
-        <GroupBox Grid.Row="2" Header="Options" Margin="10,7,10,10" Padding="5,0,5,0" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
-            <StackPanel>
-                <Button Grid.Column="0" VerticalAlignment="Center" Padding="10 3" Margin="0,5" Content="Selectionner les dossiers" Command="{Binding SelectFoldersCommand}" Style="{DynamicResource Button1}" />
-
-                <CheckBox Margin="0,5,0,5" Content="Lancement automatique" IsChecked="{Binding AutoLaunchOption}" Foreground="{DynamicResource Color.Text}"/>
-                <CheckBox Margin="0,5,0,5" Content="Rechercher dans les sous-dossiers" IsChecked="True" Command="{Binding SubfolderChangedCommand}" Foreground="{DynamicResource Color.Text}" />
-                
-                <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
-                    <Label Content="Type de fichier :" Foreground="{DynamicResource Color.Text}" />
-                    <ComboBox SelectedItem="{Binding SelectedFileType}" Style="{DynamicResource ComboBox}">
-                        <ComboBoxItem x:Name="all" Content="Tous" IsSelected="True" />
-                        <ComboBoxItem x:Name="movies" Content="Vidéos"/>
-                        <ComboBoxItem x:Name="pictures" Content="Photos"/>
-                        <ComboBoxItem x:Name="songs" Content="Musiques"/>
-                    </ComboBox>
-
-                    <Label Content="Programme :" Foreground="{DynamicResource Color.Text}" />
-                    <ComboBox ItemsSource="{Binding ApplciationList}" SelectedValue="{Binding SelectedApplication}" DisplayMemberPath="Name" Style="{DynamicResource ComboBox}"/>
-                </StackPanel>
-                
-                <Grid Margin="0,5,0,5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Label Grid.Column="0" Content="Recherche :" Foreground="{DynamicResource Color.Text}" />
-                    <TextBox Grid.Column="1" Text="{Binding SearchText, Mode=TwoWay}" VerticalAlignment="Center" Padding="0 3" Style="{StaticResource TextBox}" />
-                </Grid>
-            </StackPanel>
-        </GroupBox>
-
-        <GroupBox Grid.Row="3" Header="Informations" Margin="10,0,10,10" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
-            <Grid>
+            <Grid Grid.Column="0" Margin="10,0,0,10">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
                     <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
 
-                    <Label Grid.Column="0" Content="Dossier :" Foreground="{DynamicResource Color.Text}" />
-                    <Label Grid.Column="1" Content="{Binding CurrentFile.DirectoryName}" Foreground="{DynamicResource Color.Text}" />
+                    <GroupBox Grid.Column="0" Header="Dossiers" Padding="5,0,5,0" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto" />
+                                <RowDefinition Height="1*" />
+                            </Grid.RowDefinitions>
+
+                            <Button Grid.Row="0" Command="{Binding AddFolderCommand}" Style="{StaticResource Button1}">Ajouter</Button>
+
+                            <ListBox Grid.Row="1" ItemsSource="{Binding SelectedFolders}" Margin="0,10,0,0" HorizontalContentAlignment="Stretch">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid HorizontalAlignment="Stretch">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Grid.Column="0" Text="{Binding}" VerticalAlignment="Center" />
+                                            <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding RemoveFolderCommand, Source={StaticResource ViewModel}}" CommandParameter="{Binding}" Style="{StaticResource Button1}">
+                                                <mdt:PackIcon Kind="Trash" />
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </GroupBox>
+
+                    <GroupBox Grid.Column="1" Header="Options" Margin="10,0,0,0" Padding="5,0,5,0" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
+                        <StackPanel>
+                            <CheckBox Margin="0,5,0,5" Content="Lancement automatique" IsChecked="{Binding AutoLaunchOption}" Foreground="{DynamicResource Color.Text}"/>
+                            <CheckBox Margin="0,5,0,5" Content="Rechercher dans les sous-dossiers" IsChecked="True" Command="{Binding SubfolderChangedCommand}" Foreground="{DynamicResource Color.Text}" />
+
+                            <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
+                                <Label Content="Type de fichier :" Foreground="{DynamicResource Color.Text}" />
+                                <ComboBox ItemsSource="{Binding FileTypeOptions}"
+                                          SelectedValue="{Binding SelectedFileType, Mode=TwoWay}"
+                                          SelectedValuePath="Key"
+                                          DisplayMemberPath="Display"
+                                          Style="{DynamicResource ComboBox}" />
+                            </StackPanel>
+
+                            <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
+                                <Label Content="Programme :" Foreground="{DynamicResource Color.Text}" />
+                                <ComboBox ItemsSource="{Binding ApplciationList}" SelectedValue="{Binding SelectedApplication}" DisplayMemberPath="Name" Style="{DynamicResource ComboBox}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
                 </Grid>
 
-                <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
+                <GroupBox Grid.Row="1" Header="Recherche" Margin="0,10,0,10" Padding="5,0,5,0" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
+                    <StackPanel>
+                        <Grid Margin="0,5,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
 
-                    <Label Grid.Column="0" Content="Fichier :" Foreground="{DynamicResource Color.Text}" />
-                    <Label Grid.Column="1" Content="{Binding CurrentFile.Name}" Foreground="{DynamicResource Color.Text}" />
-                </Grid>
+                            <Label Grid.Column="0" Content="Recherche :" Foreground="{DynamicResource Color.Text}" />
+                            <TextBox Grid.Column="1" Text="{Binding SearchText, Mode=TwoWay}" VerticalAlignment="Center" Padding="0 3" Style="{StaticResource TextBox}" />
+                        </Grid>
+                    </StackPanel>
+                </GroupBox>
 
-                <ContentControl Grid.Row="2" Padding="10" Content="{Binding DetailsControl}" />
+                <GroupBox Grid.Row="2" Header="Informations" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
-                    <mdt:PackIcon Kind="Harddisk" VerticalAlignment="Center" Foreground="{DynamicResource Color.Button1.Static.Background}" Width="40" Height="40" />
-                    <TextBlock Text="{Binding FileSize}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
-                </StackPanel>
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Label Grid.Column="0" Content="Dossier :" Foreground="{DynamicResource Color.Text}" />
+                            <Label Grid.Column="1" Content="{Binding CurrentFile.DirectoryName}" Foreground="{DynamicResource Color.Text}" />
+                        </Grid>
+
+                        <Grid Grid.Row="1" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Label Grid.Column="0" Content="Fichier :" Foreground="{DynamicResource Color.Text}" />
+                            <Label Grid.Column="1" Content="{Binding CurrentFile.Name}" Foreground="{DynamicResource Color.Text}" />
+                        </Grid>
+
+                        <ContentControl Grid.Row="2" Padding="10" Content="{Binding DetailsControl}" />
+
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+                            <mdt:PackIcon Kind="Harddisk" VerticalAlignment="Center" Foreground="{DynamicResource Color.Button1.Static.Background}" Width="40" Height="40" />
+                            <TextBlock Text="{Binding FileSize}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
+                        </StackPanel>
+                    </Grid>
+                </GroupBox>
             </Grid>
-        </GroupBox>
 
-        <GroupBox Grid.Row="4" Header="Actions" Margin="10,0,10,10" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
-            <StackPanel Margin="5">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Button Grid.Column="0" Padding="5" IsEnabled="{Binding LaunchButtonEnable}" Command="{Binding OpenFolderCommand}" Style="{StaticResource Button1}" Content="Ouvrir le dossier"/>
-                    <Button Grid.Column="1" Padding="5" IsEnabled="{Binding LaunchButtonEnable}" Command="{Binding RenameCommand}" Style="{StaticResource Button1}" Content="Renommer"/>
-                    <Button Grid.Column="2" Padding="5" IsEnabled="{Binding LaunchButtonEnable}" Command="{Binding DeleteCommand}" Style="{StaticResource Button1}" Content="Supprimer"/>
-                </Grid>
-
-                <Button Grid.Column="3" Padding="5" IsEnabled="{Binding PrevButtonEnable}" Command="{Binding PreviousCommand}" Style="{StaticResource Button1}" Content="Précédent"/>
-            </StackPanel>
-        </GroupBox>
+            <GroupBox Grid.Column="1" Header="Actions" Margin="10,0,10,10" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
+                <StackPanel Margin="0,5,0,5">
+                    <Button Grid.Column="0" Margin="0,0,0,5" Padding="10" Command="{Binding RandomCommand}" Style="{StaticResource Button1}" Content="Suivant" />
+                    <Button Grid.Column="3" Margin="0,0,0,5" Padding="10" IsEnabled="{Binding PrevButtonEnable}" Command="{Binding PreviousCommand}" Style="{StaticResource Button1}" Content="Précédent"/>
+                    <Button Grid.Column="1" Margin="0,0,0,5" Padding="10" IsEnabled="{Binding LaunchButtonEnable}" Command="{Binding LaunchCommand}" Style="{StaticResource Button1}" Content="Lancer" />
+                    <Button Grid.Column="2" Margin="0,0,0,5" Padding="10" Command="{Binding RefreshCommand}" Style="{StaticResource Button1}" Content="Rafraichir" />
+                    <Button Grid.Column="2" Margin="0,0,0,5" Padding="10" IsEnabled="{Binding LaunchButtonEnable}" Command="{Binding OpenFolderCommand}" Style="{StaticResource Button1}" Content="Ouvrir le dossier"/>
+                    <Button Grid.Column="2" Margin="0,0,0,5" Padding="10" IsEnabled="{Binding LaunchButtonEnable}" Command="{Binding RenameCommand}" Style="{StaticResource Button1}" Content="Renommer"/>
+                    <Button Grid.Column="2" Margin="0,0,0,5" Padding="10" IsEnabled="{Binding LaunchButtonEnable}" Command="{Binding DeleteCommand}" Style="{StaticResource Button1}" Content="Supprimer"/>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
 
         <Grid Grid.Row="5" Margin="10,0,10,10">
             <Grid.ColumnDefinitions>
@@ -159,8 +183,8 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <ProgressBar Grid.Column="0" Margin="0,0,10,0" Height="10" Visibility="{Binding EnableProgressBar, Converter={StaticResource VisibilityConverter}}" IsIndeterminate="True" VerticalAlignment="Center" />
-            <Label Grid.Column="1" Content="{Binding FilesLabel}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
+            <ProgressBar Grid.Column="0" Height="10" Visibility="{Binding EnableProgressBar, Converter={StaticResource VisibilityConverter}}" IsIndeterminate="True" VerticalAlignment="Center" />
+            <Label Grid.Column="1" Margin="10,0,0,0" Content="{Binding FilesLabel}" VerticalAlignment="Center" Foreground="{DynamicResource Color.Text}" />
         </Grid>
     </Grid>
 </Window>

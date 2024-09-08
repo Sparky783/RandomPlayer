@@ -91,6 +91,7 @@
     <Compile Include="Models\ApplicationManager.cs" />
     <Compile Include="Models\FileExtentions.cs" />
     <Compile Include="Models\FileType.cs" />
+    <Compile Include="Models\FileTypeOption.cs" />
     <Compile Include="Models\Metadata.cs" />
     <Compile Include="Models\FileSearcher.cs" />
     <Compile Include="Models\RandomManager.cs" />
@@ -99,7 +100,6 @@
     <Compile Include="Models\Theme\ThemeManager.cs" />
     <Compile Include="Models\ViewModelNotifier.cs" />
     <Compile Include="Models\RegistryTools.cs" />
-    <Compile Include="ViewModels\SelectFoldersWindowViewModel.cs" />
     <Compile Include="Views\Controls\FileDetailsControl.xaml.cs">
       <DependentUpon>FileDetailsControl.xaml</DependentUpon>
     </Compile>
@@ -119,9 +119,6 @@
     <Compile Include="Models\Command\RelayCommand.cs" />
     <Compile Include="RenameDialogWindow.xaml.cs">
       <DependentUpon>RenameDialogWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\SelectFoldersWindow.xaml.cs">
-      <DependentUpon>SelectFoldersWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="Views\Dictionaries\StylesDictionary.xaml">
       <SubType>Designer</SubType>
@@ -164,10 +161,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="RenameDialogWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\SelectFoldersWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
