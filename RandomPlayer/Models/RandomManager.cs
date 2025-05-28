@@ -15,14 +15,12 @@ namespace RandomPlayer.Models
     {
         private List<T> _elementsList;    // Object list
         private int _elementIndex;        // Current position in the list
-        private List<T> _elementsHistory; // List of objet previously get
 
         #region Constructeur
         public RandomManager()
         {
             _elementsList = new List<T>();
             _elementIndex = 0;
-            _elementsHistory = new List<T>();
         }
         #endregion
 
@@ -63,13 +61,14 @@ namespace RandomPlayer.Models
             get { return _elementsList.Count; }
         }
 
+
         /// <summary>
-        /// Get the number of objects already gets.
+        /// Say if there is a previous element.
         /// </summary>
-        /// <returns>Number of elemnts in the history list</returns>
-        public int HistoryCount
+        /// <returns>Number of elemnts in the list</returns>
+        public bool HasPrevious
         {
-            get { return _elementsHistory.Count; }
+            get { return _elementIndex > 0; }
         }
         #endregion
 
@@ -91,10 +90,7 @@ namespace RandomPlayer.Models
                 _elementIndex = 0;
             }
 
-            T element = _elementsList[_elementIndex];
-            _elementsHistory.Add(element);
-
-            return element;
+            return _elementsList[_elementIndex];
         }
 
         /// <summary>
@@ -108,10 +104,13 @@ namespace RandomPlayer.Models
 
             _elementIndex--;
 
-            T element = _elementsHistory.Last();
-            _elementsHistory.Remove(element);
+            if (_elementIndex < 0)
+            {
+                Shuffle();
+                _elementIndex = _elementsList.Count -1;
+            }
 
-            return element;
+            return _elementsList[_elementIndex];
         }
 
         /// <summary>
@@ -120,8 +119,15 @@ namespace RandomPlayer.Models
         public void Refresh()
         {
             _elementIndex = 0;
-            _elementsHistory.Clear();
             Shuffle();
+        }
+
+        /// <summary>
+        /// Remove the current element from the list.
+        /// </summary>
+        public void DeleteCurrent()
+        {
+            _elementsList.RemoveAt(_elementIndex);
         }
 
         /// <summary>

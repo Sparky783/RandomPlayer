@@ -91,7 +91,7 @@
                     <GroupBox Grid.Column="1" Header="Options" Margin="10,0,0,0" Padding="5,0,5,0" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
                         <StackPanel>
                             <CheckBox Margin="0,5,0,5" Content="Lancement automatique" IsChecked="{Binding AutoLaunchOption}" Foreground="{DynamicResource Color.Text}"/>
-                            <CheckBox Margin="0,5,0,5" Content="Rechercher dans les sous-dossiers" IsChecked="True" Command="{Binding SubfolderChangedCommand}" Foreground="{DynamicResource Color.Text}" />
+                            <CheckBox Margin="0,5,0,5" Content="Rechercher dans les sous-dossiers" IsChecked="{Binding SearchSubfolderOption}" Command="{Binding SubfolderChangedCommand}" Foreground="{DynamicResource Color.Text}" />
 
                             <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
                                 <Label Content="Type de fichier :" Foreground="{DynamicResource Color.Text}" />
@@ -166,7 +166,7 @@
 
             <GroupBox Grid.Column="1" Header="Actions" Margin="10,0,10,10" IsEnabled="{Binding EnableProgressBar, Converter={StaticResource InvertBooleanConverter}}" Foreground="{DynamicResource Color.Text}" Style="{StaticResource ResourceKey=GroupBox}">
                 <StackPanel Margin="0,5,0,5">
-                    <Button Grid.Column="0" Margin="0,0,0,5" Padding="10" Command="{Binding RandomCommand}" Style="{StaticResource Button1}" Content="Suivant" />
+                    <Button Grid.Column="0" Margin="0,0,0,5" Padding="10" Command="{Binding NextCommand}" Style="{StaticResource Button1}" Content="Suivant" />
                     <Button Grid.Column="3" Margin="0,0,0,5" Padding="10" IsEnabled="{Binding PrevButtonEnable}" Command="{Binding PreviousCommand}" Style="{StaticResource Button1}" Content="Précédent"/>
                     <Button Grid.Column="1" Margin="0,0,0,5" Padding="10" IsEnabled="{Binding LaunchButtonEnable}" Command="{Binding LaunchCommand}" Style="{StaticResource Button1}" Content="Lancer" />
                     <Button Grid.Column="2" Margin="0,0,0,5" Padding="10" Command="{Binding RefreshCommand}" Style="{StaticResource Button1}" Content="Rafraichir" />
