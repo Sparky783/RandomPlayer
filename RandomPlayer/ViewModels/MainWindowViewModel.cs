@@ -78,7 +78,6 @@ namespace RandomPlayer.ViewModels
                 Task.Run(() => { Details(); });
             };
 
-            LoadSettings();
 
             // Initialize commands for user.
             InitCommands();
@@ -86,10 +85,11 @@ namespace RandomPlayer.ViewModels
             // Set default options
             CurrentFile = SelectedFile.Empty;
             AutoLaunchOption = true;
-            SearchSubfolderOption = Properties.Settings.Default.SubFolderSelected;
             PrevButtonEnable = false;
             EnableProgressBar = false;
             FilesLabel = "0 fichiers";
+
+            LoadSettings();
         }
 
         #region Properties
@@ -794,6 +794,9 @@ namespace RandomPlayer.ViewModels
                 SelectedFileType = Properties.Settings.Default.SelectedType;
             else
                 SelectedFileType = "all";
+
+            // Load Subfolder option
+            SearchSubfolderOption = Properties.Settings.Default.SubFolderSelected;
         }
         #endregion
     }
