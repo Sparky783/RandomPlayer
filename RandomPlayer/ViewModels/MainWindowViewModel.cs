@@ -12,6 +12,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -442,7 +443,7 @@ namespace RandomPlayer.ViewModels
         }
         #endregion
 
-        #region Button methods
+        #region Private methods
         /// <summary>
         /// Add a folder to the search list
         /// </summary>
@@ -481,7 +482,7 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Open a folder dialog to choose the working directory.
         /// </summary>
-        public void SubfolderChanged(object parameter)
+        private void SubfolderChanged(object parameter)
         {
             // Save user preference
             Properties.Settings.Default.SubFolderSelected = SearchSubfolderOption;
@@ -494,7 +495,7 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Find a new file from a random function, and try to lunch if it's asked.
         /// </summary>
-        public void Next()
+        private void Next()
         {
             if (!CheckSelectedFolders())
             {
@@ -526,7 +527,7 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Lunch the file if there is one.
         /// </summary>
-        public void Launch()
+        private void Launch()
         {
             if (CurrentFile == null)
                 return;
@@ -536,11 +537,31 @@ namespace RandomPlayer.ViewModels
                 if(SelectedApplication != null && !string.IsNullOrEmpty(SelectedApplication.Executable))
                 {
                     string progamPath = RegistryTools.GetPathForExe(SelectedApplication.Executable);
-                    Process.Start(progamPath, "\"" + CurrentFile.File.FullName + "\"");
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = progamPath,
+                        Arguments = $"\"{CurrentFile.File.FullName}\"",
+                        UseShellExecute = false
+                    });
                 }
                 else
                 {
-                    Process.Start(CurrentFile.File.FullName);
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        Process.Start(new ProcessStartInfo(CurrentFile.File.FullName) { UseShellExecute = true });
+                    }
+                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    {
+                        Process.Start("xdg-open", $"\"{CurrentFile.File.FullName}\"");
+                    }
+                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    {
+                        Process.Start("open", $"\"{CurrentFile.File.FullName}\"");
+                    }
+                    else
+                    {
+                        throw new PlatformNotSupportedException("Unsupported OS platform");
+                    }
                 }
             }
             catch (Exception e)
@@ -560,7 +581,7 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Open the folder of the current file.
         /// </summary>
-        public void OpenFolder()
+        private void OpenFolder()
         {
             if (!CheckSelectedFolders() || CurrentFile == null)
                 return;
@@ -578,7 +599,7 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Rename the current file.
         /// </summary>
-        public void Rename()
+        private void Rename()
         {
             if (!CheckSelectedFolders() || CurrentFile == null)
                 return;
@@ -600,7 +621,7 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Remove the current file.
         /// </summary>
-        public void Delete()
+        private void Delete()
         {
             if (!CheckSelectedFolders() || CurrentFile == null)
                 return;
@@ -628,7 +649,7 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Launch the previous file
         /// </summary>
-        public void Previous()
+        private void Previous()
         {
             FileInfo file = _randomManager.Previous();
 
@@ -652,11 +673,10 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Close the application
         /// </summary>
-        public void Quit()
+        private void Quit()
         {
             App.Current.Shutdown();
         }
-        #endregion
 
         /// <summary>
         /// Get details of the file and display them.
@@ -773,5 +793,6 @@ namespace RandomPlayer.ViewModels
             if (!string.IsNullOrEmpty(Properties.Settings.Default.SelectedType))
                 SelectedFileType = Properties.Settings.Default.SelectedType;
         }
+        #endregion
     }
 }
