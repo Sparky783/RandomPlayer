@@ -3,13 +3,16 @@ using NReco.VideoInfo;
 using RandomPlayer.Models;
 using RandomPlayer.Models.Command;
 using RandomPlayer.Models.Theme;
+using RandomPlayer.Views;
 using RandomPlayer.Views.Controls;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,15 +24,19 @@ namespace RandomPlayer.ViewModels
 {
     public class MainWindowViewModel : ViewModelNotifier
     {
-        private RandomFileManager _randomFileManager;
+        private RandomManager<FileInfo> _randomManager;
+        private FileSearcher _fileSearcher;
         private ApplicationManager _applicationManager;
         private ThemeManager _themeManager;
-        
+        private bool _hasFirstRead;
+
         // Load common details controls
         private UserControl pictureDetailsControl = new PictureDetailsControl();
         private UserControl movieDetailsControl = new MovieDetailsControl();
         private UserControl musicDetailsControl = new MusicDetailsControl();
         private UserControl fileDetailsControl = new FileDetailsControl();
+
+        public ObservableCollection<FileTypeOption> FileTypeOptions { get; set; }
 
 
         public MainWindowViewModel()
@@ -37,40 +44,58 @@ namespace RandomPlayer.ViewModels
             // Initialize objects
             _applicationManager = new ApplicationManager();
             _themeManager = new ThemeManager();
+            _randomManager = new RandomManager<FileInfo>();
+            _selectedFolders = new ObservableCollection<string>();
+            _hasFirstRead = false;
 
-            // Initialize the main code of the application.
-            _randomFileManager = new RandomFileManager();
-            _randomFileManager.StartSearchEvent += (object sender, EventArgs e) => {
+            FileTypeOptions = new ObservableCollection<FileTypeOption>
+            {
+                new FileTypeOption { Key = "all", Display = "Tous" },
+                new FileTypeOption { Key = "movies", Display = "Vidéos" },
+                new FileTypeOption { Key = "pictures", Display = "Photos" },
+                new FileTypeOption { Key = "songs", Display = "Musiques" }
+            };
+
+            // Initialize events for the file research.
+            _fileSearcher = new FileSearcher();
+            _fileSearcher.StartSearchEvent += (object sender, EventArgs e) => {
                 EnableProgressBar = true;
             };
-            _randomFileManager.FinishSearchEvent += (object sender, EventArgs e) => {
+            _fileSearcher.FinishSearchEvent += (object sender, EventArgs e) => {
                 EnableProgressBar = false;
-                Files = _randomFileManager.FileCount + " fichiers";
-            };
-            
-            // Define the default working directory
-            if(string.IsNullOrEmpty(Properties.Settings.Default.DefaultFolder))
-            {
-                Properties.Settings.Default.DefaultFolder = AppDomain.CurrentDomain.BaseDirectory;
-                Properties.Settings.Default.Save();
-            }
-            _randomFileManager.SelectedFolder = Properties.Settings.Default.DefaultFolder;
+                _randomManager.List = _fileSearcher.FileList;
+                FilesLabel = _randomManager.Count + " fichiers";
 
-            _themeManager.ChangeTheme(ThemeManager.ConvertIntToThemeType(Properties.Settings.Default.ThemeType));
+                ClearDetails();
+
+                if(_randomManager.Count > 0)
+                    CurrentFile = new SelectedFile(_randomManager.Current);
+
+                LaunchButtonEnable = true;
+                _hasFirstRead = false;
+
+                // Load details
+                Task.Run(() => { Details(); });
+            };
+
 
             // Initialize commands for user.
             InitCommands();
 
             // Set default options
-            SelectedFile = new FileInfo("Aucun dossier n'est sélèctionné.");
+            CurrentFile = SelectedFile.Empty;
             AutoLaunchOption = true;
-            SearchSubfolderOption = true;
             PrevButtonEnable = false;
             EnableProgressBar = false;
-            Files = "0 fichiers";
+            FilesLabel = "0 fichiers";
+
+            LoadSettings();
         }
 
         #region Properties
+        /// <summary>
+        /// Theme to display
+        /// </summary>
         public ThemeType SelectedTheme
         {
             get
@@ -80,67 +105,72 @@ namespace RandomPlayer.ViewModels
 
             set
             {
-                // Set and save user preference
+                // Save user preference
                 Properties.Settings.Default.ThemeType = ThemeManager.ConvertThemeTypeToInt(value);
                 Properties.Settings.Default.Save();
+
+                // Set theme to display it
                 _themeManager.ChangeTheme(value);
                 OnPropertyChanged("SelectedTheme");
             }
         }
 
-        public string SelectedFolder
+        /// <summary>
+        /// List of folder used to search files
+        /// </summary>
+        private ObservableCollection<string> _selectedFolders;
+        public ObservableCollection<string> SelectedFolders
         {
             get
             {
-                return _randomFileManager.SelectedFolder;
+                return _selectedFolders;
             }
 
             set
             {
-                if(Directory.Exists(value))
-                {
-                    // Set and save user preference
-                    Properties.Settings.Default.DefaultFolder = value;
-                    Properties.Settings.Default.Save();
-                    _randomFileManager.SelectedFolder = Properties.Settings.Default.DefaultFolder;
-
-                    OnPropertyChanged("SelectedFolder");
-                }
+                _selectedFolders = value;
+                OnPropertyChanged("SelectedFolders");
             }
         }
 
-        private FileInfo _selectedFile;
-        public FileInfo SelectedFile
+        /// <summary>
+        /// Current file opened/displayed
+        /// </summary>
+        private SelectedFile _currentFile;
+        public SelectedFile CurrentFile
         {
             get
             {
-                return _selectedFile;
+                return _currentFile;
             }
 
             set
             {
-                _selectedFile = value;
-                OnPropertyChanged("SelectedFile");
+                _currentFile = value;
+                OnPropertyChanged("CurrentFile");
             }
         }
 
-        public ComboBoxItem SelectedFileType
+        /// <summary>
+        /// Type of file to searche
+        /// </summary>
+        public string SelectedFileType
         {
             get
             {
-                switch (_randomFileManager.SelectedType)
+                switch (_fileSearcher.SelectedType)
                 {
                     case FileType.None:
-                        return new ComboBoxItem() { Name = "all" };
+                        return "all";
 
                     case FileType.Movie:
-                        return new ComboBoxItem() { Name = "movies" };
+                        return "movies";
 
                     case FileType.Picture:
-                        return new ComboBoxItem() { Name = "pictures" };
+                        return "pictures";
 
                     case FileType.Song:
-                        return new ComboBoxItem() { Name = "songs" };
+                        return "songs";
 
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -149,25 +179,25 @@ namespace RandomPlayer.ViewModels
 
             set
             {
-                switch (value.Name)
+                 switch (value)
                 {
                     case "all":
-                        _randomFileManager.SelectedType = FileType.None;
+                        _fileSearcher.SelectedType = FileType.None;
                         ApplciationList = _applicationManager.DefaultApplicationList;
                         break;
 
                     case "movies":
-                        _randomFileManager.SelectedType = FileType.Movie;
+                        _fileSearcher.SelectedType = FileType.Movie;
                         ApplciationList = _applicationManager.MovieApplicationList;
                         break;
 
                     case "pictures":
-                        _randomFileManager.SelectedType = FileType.Picture;
+                        _fileSearcher.SelectedType = FileType.Picture;
                         ApplciationList = _applicationManager.PictureApplicationList;
                         break;
 
                     case "songs":
-                        _randomFileManager.SelectedType = FileType.Song;
+                        _fileSearcher.SelectedType = FileType.Song;
                         ApplciationList = _applicationManager.MusicApplicationList;
                         break;
 
@@ -175,83 +205,99 @@ namespace RandomPlayer.ViewModels
                         throw new ArgumentOutOfRangeException();
                 }
 
-                SelectedApplication = ApplciationList[0];
+                Properties.Settings.Default.SelectedType = value;
+                Properties.Settings.Default.Save();
 
+                SelectedApplication = ApplciationList[0];
                 OnPropertyChanged("SelectedFileType");
             }
         }
 
-        private List<Application> applicationList;
+        /// <summary>
+        /// List of application can be used to open the current file
+        /// </summary>
+        private List<Application> _applicationList;
         public List<Application> ApplciationList
         {
             get
             {
-                return applicationList;
+                return _applicationList;
             }
 
             set
             {
-                applicationList = value;
+                _applicationList = value;
                 OnPropertyChanged("ApplciationList");
             }
         }
 
-        private Application selectedApplication;
+        /// <summary>
+        /// Selected application can be used to open the current file
+        /// </summary>
+        private Application _selectedApplication;
         public Application SelectedApplication
         {
             get
             {
-                return selectedApplication;
+                return _selectedApplication;
             }
 
             set
             {
-                selectedApplication = value;
+                _selectedApplication = value;
                 OnPropertyChanged("SelectedApplication");
             }
         }
 
-        private bool launchButtonEnable;
+        private bool _launchButtonEnable;
         public bool LaunchButtonEnable
         {
             get
             {
-                return launchButtonEnable;
+                return _launchButtonEnable;
             }
 
             set
             {
-                launchButtonEnable = value;
+                _launchButtonEnable = value;
                 OnPropertyChanged("LaunchButtonEnable");
             }
         }
 
-        private bool prevButtonEnable;
+        public bool NextButtonEnable
+        {
+            get
+            {
+                return SelectedFolders.Count > 0;
+            }
+        }
+
+        private bool _prevButtonEnable;
         public bool PrevButtonEnable
         {
             get
             {
-                return prevButtonEnable;
+                return _prevButtonEnable;
             }
 
             set
             {
-                prevButtonEnable = value;
+                _prevButtonEnable = value;
                 OnPropertyChanged("PrevButtonEnable");
             }
         }
 
-        private bool autoLaunchOption;
+        private bool _autoLaunchOption;
         public bool AutoLaunchOption
         {
             get
             {
-                return autoLaunchOption;
+                return _autoLaunchOption;
             }
 
             set
             {
-                autoLaunchOption = value;
+                _autoLaunchOption = value;
                 OnPropertyChanged("AutoLaunchOption");
             }
         }
@@ -260,115 +306,114 @@ namespace RandomPlayer.ViewModels
         {
             get
             {
-                return _randomFileManager.UseSubFolders;
+                return _fileSearcher.UseSubFolders;
             }
 
             set
             {
-                _randomFileManager.UseSubFolders = value;
+                _fileSearcher.UseSubFolders = value;
                 OnPropertyChanged("SearchSubfolderOption");
             }
         }
 
-        private string searchText;
+        private string _searchText;
         public string SearchText
         {
             get
             {
-                return searchText;
+                return _searchText;
             }
 
             set
             {
-                if (value != searchText)
+                if (value != _searchText)
                 {
-                    searchText = value;
-                    _randomFileManager.SearchText = value;
+                    _searchText = value;
+                    _fileSearcher.SearchText = value;
                     OnPropertyChanged("SearchText");
                 }
             }
         }
 
-        private bool enableProgressBar;
+        private bool _enableProgressBar;
         public bool EnableProgressBar
         {
             get
             {
-                return enableProgressBar;
+                return _enableProgressBar;
             }
 
             set
             {
-                enableProgressBar = value;
+                _enableProgressBar = value;
                 OnPropertyChanged("EnableProgressBar");
             }
         }
 
-        public string files;
-        public string Files
+        public string _files;
+        public string FilesLabel
         {
             get
             {
-                return files;
+                return _files;
             }
 
             set
             {
-                files = value;
-                OnPropertyChanged("Files");
+                _files = value;
+                OnPropertyChanged("FilesLabel");
             }
         }
 
-        public UserControl detailsControl;
+        public UserControl _detailsControl;
         public UserControl DetailsControl
         {
             get
             {
-                return detailsControl;
+                return _detailsControl;
             }
 
             set
             {
-                detailsControl = value;
+                _detailsControl = value;
                 OnPropertyChanged("DetailsControl");
             }
         }
         
-        public Metadata fileMetadata;
+        public Metadata _fileMetadata;
         public Metadata FileMetadata
         {
             get
             {
-                return fileMetadata;
+                return _fileMetadata;
             }
 
             set
             {
-                fileMetadata = value;
+                _fileMetadata = value;
                 OnPropertyChanged("FileMetadata");
             }
         }
 
-        public string fileSize;
+        public string _fileSize;
         public string FileSize
         {
             get
             {
-                return fileSize;
+                return _fileSize;
             }
 
             set
             {
-                fileSize = value;
+                _fileSize = value;
                 OnPropertyChanged("FileSize");
             }
         }
         #endregion
 
         #region Commands
-        public ICommand SelectFolderCommand { get; private set; }
         public ICommand SubfolderChangedCommand { get; private set; }
-        public ICommand RandomCommand { get; private set; }
+        public ICommand NextCommand { get; private set; }
         public ICommand LaunchCommand { get; private set; }
         public ICommand RefreshCommand { get; private set; }
         public ICommand OpenFolderCommand { get; private set; }
@@ -376,15 +421,16 @@ namespace RandomPlayer.ViewModels
         public ICommand DeleteCommand { get; private set; }
         public ICommand PreviousCommand { get; private set; }
         public ICommand QuitCommand { get; private set; }
+        public ICommand AddFolderCommand { get; private set; }
+        public ICommand RemoveFolderCommand { get; private set; }
 
         /// <summary>
         /// Init all commands for WPF view.
         /// </summary>
         private void InitCommands()
         {
-            SelectFolderCommand = new RelayCommand(x => { SelectFolder(); });
-            SubfolderChangedCommand = new RelayCommand(x => { SubfolderChanged(); });
-            RandomCommand = new RelayCommand(x => { Random(); });
+            SubfolderChangedCommand = new RelayCommand(x => { SubfolderChanged(x); });
+            NextCommand = new RelayCommand(x => { Next(); });
             LaunchCommand = new RelayCommand(x => { Launch(); });
             RefreshCommand = new RelayCommand(x => { Refresh(); });
             OpenFolderCommand = new RelayCommand(x => { OpenFolder(); });
@@ -392,84 +438,135 @@ namespace RandomPlayer.ViewModels
             DeleteCommand = new RelayCommand(x => { Delete(); });
             PreviousCommand = new RelayCommand(x => { Previous(); });
             QuitCommand = new RelayCommand(x => { Quit(); });
+            AddFolderCommand = new RelayCommand(x => { AddFolder(); });
+            RemoveFolderCommand = new RelayCommand(x => { RemoveFolder(x); });
         }
         #endregion
 
-        #region Button methods
+        #region Private methods
         /// <summary>
-        /// Open a folder dialog to choose the working directory.
+        /// Add a folder to the search list
         /// </summary>
-        public void SelectFolder()
+        private void AddFolder()
         {
-            System.Windows.Forms.FolderBrowserDialog ofd = new System.Windows.Forms.FolderBrowserDialog();
+            System.Windows.Forms.FolderBrowserDialog fbd = new System.Windows.Forms.FolderBrowserDialog();
 
-            if(ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                SelectedFolder = ofd.SelectedPath;
+            if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                SelectedFolders.Add(fbd.SelectedPath);
+
+                SaveTool.SetSelectedFolders(SelectedFolders.ToList());
+                _fileSearcher.SourceFolders = SelectedFolders.ToList();
+
+                OnPropertyChanged("NextButtonEnable");
+            }
+        }
+
+        /// <summary>
+        /// Remove folder from the search list
+        /// </summary>
+        /// <param name="parameter"></param>
+        private void RemoveFolder(object parameter)
+        {
+            if (parameter is string item)
+            {
+                SelectedFolders.Remove(item);
+
+                SaveTool.SetSelectedFolders(SelectedFolders.ToList());
+                _fileSearcher.SourceFolders = SelectedFolders.ToList();
+
+                OnPropertyChanged("NextButtonEnable");
+            }
         }
 
         /// <summary>
         /// Open a folder dialog to choose the working directory.
         /// </summary>
-        public void SubfolderChanged()
+        private void SubfolderChanged(object parameter)
         {
-            _randomFileManager.Refresh();
+            // Save user preference
+            Properties.Settings.Default.SubFolderSelected = SearchSubfolderOption;
+            Properties.Settings.Default.Save();
+
+            _fileSearcher.UseSubFolders = SearchSubfolderOption;
+            _randomManager.Refresh();
         }
 
         /// <summary>
         /// Find a new file from a random function, and try to lunch if it's asked.
         /// </summary>
-        public void Random()
+        private void Next()
         {
-            if (Directory.Exists(SelectedFolder))
+            if (!CheckSelectedFolders())
             {
-                if (_randomFileManager.FileCount > 0)
-                {
-                    ClearDetails();
-                    SelectedFile = _randomFileManager.NextFile();
-
-                    LaunchButtonEnable = true;
-                    PrevButtonEnable = true;
-
-                    // Load details
-                    Task.Run(() => { Details(); });
-
-                    if (AutoLaunchOption)
-                        Launch();
-                }
-                else
-                {
-                    MessageBox.Show("Aucun fichier correspondant aux critères n'a été trouvé.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                CurrentFile = SelectedFile.Empty;
+                return;
             }
-            else
+
+            if (_randomManager.Count <= 0)
             {
-                SelectedFile = new FileInfo("Aucun dossier n'est sélèctionné.");
+                MessageBox.Show("Aucun fichier correspondant aux critères n'a été trouvé.", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
             }
+
+            ClearDetails();
+            CurrentFile = new SelectedFile(GetNext());
+
+            LaunchButtonEnable = true;
+            PrevButtonEnable = _hasFirstRead;
+
+            _hasFirstRead = true;
+
+            // Load details
+            Task.Run(() => { Details(); });
+
+            if (AutoLaunchOption)
+                Launch();
         }
 
         /// <summary>
         /// Lunch the file if there is one.
         /// </summary>
-        public void Launch()
+        private void Launch()
         {
-            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
+            if (CurrentFile == null)
+                return;
+
+            try
             {
-                try
+                if(SelectedApplication != null && !string.IsNullOrEmpty(SelectedApplication.Executable))
                 {
-                    if(SelectedApplication != null && !string.IsNullOrEmpty(SelectedApplication.Executable))
+                    string progamPath = RegistryTools.GetPathForExe(SelectedApplication.Executable);
+                    Process.Start(new ProcessStartInfo
                     {
-                        string progamPath = RegistryTools.GetPathForExe(SelectedApplication.Executable);
-                        Process.Start(progamPath, "\"" + _randomFileManager.CurrentFile.FullName + "\"");
+                        FileName = progamPath,
+                        Arguments = $"\"{CurrentFile.File.FullName}\"",
+                        UseShellExecute = false
+                    });
+                }
+                else
+                {
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        Process.Start(new ProcessStartInfo(CurrentFile.File.FullName) { UseShellExecute = true });
+                    }
+                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    {
+                        Process.Start("xdg-open", $"\"{CurrentFile.File.FullName}\"");
+                    }
+                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    {
+                        Process.Start("open", $"\"{CurrentFile.File.FullName}\"");
                     }
                     else
                     {
-                        Process.Start(_randomFileManager.CurrentFile.FullName);
+                        throw new PlatformNotSupportedException("Unsupported OS platform");
                     }
                 }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Une erreur est survenue lors du lancement du fichier : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Une erreur est survenue lors du lancement du fichier : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -478,116 +575,122 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         private void Refresh()
         {
-            _randomFileManager.Refresh();
+            _fileSearcher.Search();
         }
 
         /// <summary>
         /// Open the folder of the current file.
         /// </summary>
-        public void OpenFolder()
+        private void OpenFolder()
         {
-            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
+            if (!CheckSelectedFolders() || CurrentFile == null)
+                return;
+
+            try
             {
-                try
-                {
-                    Process.Start(_randomFileManager.CurrentFile.DirectoryName);
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Une erreur est survenue lors du l'ouverture du dossier : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                Process.Start(CurrentFile.DirectoryName);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Une erreur est survenue lors du l'ouverture du dossier : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         /// <summary>
         /// Rename the current file.
         /// </summary>
-        public void Rename()
+        private void Rename()
         {
-            if (Directory.Exists(SelectedFolder) && SelectedFile != null)
+            if (!CheckSelectedFolders() || CurrentFile == null)
+                return;
+
+            FileInfo file = CurrentFile.File;
+            RenameDialogWindow rdw = new RenameDialogWindow();
+            rdw.fileName.Text = file.Name.Replace(file.Extension, "");
+            Nullable<bool> result = rdw.ShowDialog();
+
+            if(result == true)
             {
-                RenameDialogWindow rdw = new RenameDialogWindow();
-                rdw.fileName.Text = SelectedFile.Name.Replace(SelectedFile.Extension, "");
-                Nullable<bool> result = rdw.ShowDialog();
-
-                if(result == true)
-                {
-                    string newName = rdw.fileName.Text + SelectedFile.Extension;
-                    SelectedFile.MoveTo(Path.Combine(SelectedFile.DirectoryName, newName));
-                }
-
-                rdw.Close();
+                string newName = rdw.fileName.Text + file.Extension;
+                file.MoveTo(Path.Combine(file.DirectoryName, newName));
             }
+
+            rdw.Close();
         }
 
         /// <summary>
         /// Remove the current file.
         /// </summary>
-        public void Delete()
+        private void Delete()
         {
-            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
-            {
-                MessageBoxResult result = MessageBox.Show("Voulez-vous vraiment supprimer ce fichier ?", "Supprimer le fichier", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (!CheckSelectedFolders() || CurrentFile == null)
+                return;
 
-                if(result == MessageBoxResult.Yes)
-                {
-                    try
-                    {
-                        File.Delete(_randomFileManager.CurrentFile.FullName);
-                        _randomFileManager.Refresh();
-                        SelectedFile = new FileInfo("Aucun dossier n'est sélèctionné.");
-                        LaunchButtonEnable = false;
-                    }
-                    catch (Exception e)
-                    {
-                        MessageBox.Show("Une erreur est survenue : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
+            MessageBoxResult result = MessageBox.Show("Voulez-vous vraiment supprimer ce fichier ?", "Supprimer le fichier", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+            
+            try
+            {
+                File.Delete(CurrentFile.File.FullName);
+                _randomManager.DeleteCurrent();
+                _hasFirstRead = false;
+
+                CurrentFile = SelectedFile.Empty;
+                LaunchButtonEnable = false;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Une erreur est survenue : " + e.Message, "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         /// <summary>
         /// Launch the previous file
         /// </summary>
-        public void Previous()
+        private void Previous()
         {
-            FileInfo file = _randomFileManager.PreviousFile();
-            if (file != null)
-            {
-                SelectedFile = file;
+            FileInfo file = _randomManager.Previous();
 
-                LaunchButtonEnable = true;
+            if (file == null)
+                return;
 
-                if(_randomFileManager.RemainingPreviousFiles <= 1)
-                    PrevButtonEnable = false;
+            CurrentFile = new SelectedFile(file);
 
-                ClearDetails();
-                Task.Run(() => { Details(); });
+            LaunchButtonEnable = true;
+            PrevButtonEnable = _randomManager.HasPrevious;
 
-                if (AutoLaunchOption)
-                    Launch();
-            }
+            _hasFirstRead = true;
+
+            ClearDetails();
+            Task.Run(() => { Details(); });
+
+            if (AutoLaunchOption)
+                Launch();
         }
 
         /// <summary>
         /// Close the application
         /// </summary>
-        public void Quit()
+        private void Quit()
         {
             App.Current.Shutdown();
         }
-        #endregion
 
         /// <summary>
         /// Get details of the file and display them.
         /// </summary>
         private void Details()
         {
+            if (CurrentFile == null)
+                return;
+
             // Get standard information
-            FileSize = FormatFileSize(_randomFileManager.CurrentFile.Length);
+            FileSize = FormatFileSize(CurrentFile.File.Length);
 
             // Gest file type
-            string ext = _randomFileManager.CurrentFile.Extension.ToLower();
+            string ext = CurrentFile.File.Extension.ToLower();
 
             if (FileExtentions.Pictures.Contains(ext))
             {
@@ -605,7 +708,9 @@ namespace RandomPlayer.ViewModels
                 DetailsControl = musicDetailsControl;
             }
             else
+            {
                 DetailsControl = fileDetailsControl;
+            }
         }
 
         /// <summary>
@@ -613,12 +718,12 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         private void MediaDetails()
         {
-            if (Directory.Exists(SelectedFolder) && _randomFileManager.CurrentFile != null)
-            {
-                // Get media information
-                FFProbe ffProbe = new FFProbe();
-                FileMetadata = new Metadata(ffProbe.GetMediaInfo(_randomFileManager.CurrentFile.FullName));
-            }
+            if (!CheckSelectedFolders() || CurrentFile == null)
+                return;
+            
+            // Get media information
+            FFProbe ffProbe = new FFProbe();
+            FileMetadata = new Metadata(ffProbe.GetMediaInfo(CurrentFile.File.FullName));
         }
 
         /// <summary>
@@ -650,5 +755,49 @@ namespace RandomPlayer.ViewModels
             // Adjust the format string to your preferences. For example "{0:0.#}{1}" would show a single decimal place, and no space.
             return String.Format("{0:0.##} {1}", len, sizes[order]);
         }
+
+        private bool CheckSelectedFolders()
+        {
+            if (_fileSearcher.SourceFolders.Count <= 0)
+                return false;
+
+            foreach (string folder in _fileSearcher.SourceFolders)
+            {
+                if (!Directory.Exists(folder))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private FileInfo GetNext()
+        {
+            return _hasFirstRead ? _randomManager.Next() : _randomManager.Current;
+        }
+
+        private void LoadSettings()
+        {
+            // Load saved selected folders
+            List<string> savedFolders = SaveTool.GetSelectedFolders();
+
+            if (savedFolders.Count > 0)
+            {
+                SelectedFolders = new ObservableCollection<string>(savedFolders);
+                _fileSearcher.SourceFolders = savedFolders;
+            }
+
+            // Load saved theme
+            _themeManager.ChangeTheme(ThemeManager.ConvertIntToThemeType(Properties.Settings.Default.ThemeType));
+
+            // Load saved file type
+            if (!string.IsNullOrEmpty(Properties.Settings.Default.SelectedType))
+                SelectedFileType = Properties.Settings.Default.SelectedType;
+            else
+                SelectedFileType = "all";
+
+            // Load Subfolder option
+            SearchSubfolderOption = Properties.Settings.Default.SubFolderSelected;
+        }
+        #endregion
     }
 }
