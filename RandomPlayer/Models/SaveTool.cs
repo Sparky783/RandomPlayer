@@ -26,6 +26,9 @@ namespace RandomPlayer.Models
 
         private static List<string> UnstringifyList(string stringList)
         {
+            if(string.IsNullOrEmpty(stringList))
+                return new List<string>();
+
             return new List<string>(stringList.Split(';'));
         }
     }

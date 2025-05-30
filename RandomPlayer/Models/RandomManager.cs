@@ -140,13 +140,17 @@ namespace RandomPlayer.Models
 
             Random random = new Random();
             int nbElements = _elementsList.Count;
+            int complexity = 3;
 
-            for (int index = 0; index < nbElements; index++)
+            for (int i = 0; i < complexity; i++)
             {
-                int randomIndex = random.Next(nbElements);
-                T value = _elementsList[randomIndex];
-                _elementsList[randomIndex] = _elementsList[index];
-                _elementsList[index] = value;
+                for (int index = 0; index < nbElements; index++)
+                {
+                    int randomIndex = random.Next(nbElements);
+                    T value = _elementsList[randomIndex];
+                    _elementsList[randomIndex] = _elementsList[index];
+                    _elementsList[index] = value;
+                }
             }
         }
         #endregion

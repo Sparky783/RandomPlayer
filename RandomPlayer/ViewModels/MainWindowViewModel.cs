@@ -68,36 +68,22 @@ namespace RandomPlayer.ViewModels
                 ClearDetails();
 
                 if(_randomManager.Count > 0)
-                    CurrentFile = _randomManager.Current;
+                    CurrentFile = new SelectedFile(_randomManager.Current);
 
                 LaunchButtonEnable = true;
-                PrevButtonEnable = false;
+                _hasFirstRead = false;
 
                 // Load details
                 Task.Run(() => { Details(); });
             };
 
-            // Load saved selected folders
-            List<string> savedFolders = SaveTool.GetSelectedFolders();
-
-            if (savedFolders.Count > 0)
-            {
-                SelectedFolders = new ObservableCollection<string>(savedFolders);
-                _fileSearcher.SourceFolders = savedFolders;
-            }
-
-            // Load saved theme
-            _themeManager.ChangeTheme(ThemeManager.ConvertIntToThemeType(Properties.Settings.Default.ThemeType));
-
-            // Load saved file type
-            if(!string.IsNullOrEmpty(Properties.Settings.Default.SelectedType))
-                SelectedFileType = Properties.Settings.Default.SelectedType;
+            LoadSettings();
 
             // Initialize commands for user.
             InitCommands();
 
             // Set default options
-            CurrentFile = new FileInfo("Aucun dossier n'est sélèctionné.");
+            CurrentFile = SelectedFile.Empty;
             AutoLaunchOption = true;
             SearchSubfolderOption = Properties.Settings.Default.SubFolderSelected;
             PrevButtonEnable = false;
@@ -149,8 +135,8 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Current file opened/displayed
         /// </summary>
-        private FileInfo _currentFile;
-        public FileInfo CurrentFile
+        private SelectedFile _currentFile;
+        public SelectedFile CurrentFile
         {
             get
             {
@@ -229,17 +215,17 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// List of application can be used to open the current file
         /// </summary>
-        private List<Application> applicationList;
+        private List<Application> _applicationList;
         public List<Application> ApplciationList
         {
             get
             {
-                return applicationList;
+                return _applicationList;
             }
 
             set
             {
-                applicationList = value;
+                _applicationList = value;
                 OnPropertyChanged("ApplciationList");
             }
         }
@@ -247,62 +233,70 @@ namespace RandomPlayer.ViewModels
         /// <summary>
         /// Selected application can be used to open the current file
         /// </summary>
-        private Application selectedApplication;
+        private Application _selectedApplication;
         public Application SelectedApplication
         {
             get
             {
-                return selectedApplication;
+                return _selectedApplication;
             }
 
             set
             {
-                selectedApplication = value;
+                _selectedApplication = value;
                 OnPropertyChanged("SelectedApplication");
             }
         }
 
-        private bool launchButtonEnable;
+        private bool _launchButtonEnable;
         public bool LaunchButtonEnable
         {
             get
             {
-                return launchButtonEnable;
+                return _launchButtonEnable;
             }
 
             set
             {
-                launchButtonEnable = value;
+                _launchButtonEnable = value;
                 OnPropertyChanged("LaunchButtonEnable");
             }
         }
 
-        private bool prevButtonEnable;
+        public bool NextButtonEnable
+        {
+            get
+            {
+                return SelectedFolders.Count > 0;
+            }
+        }
+
+        private bool _prevButtonEnable;
         public bool PrevButtonEnable
         {
             get
             {
-                return prevButtonEnable;
+                return _prevButtonEnable;
             }
 
             set
             {
-                prevButtonEnable = value;
+                _prevButtonEnable = value;
                 OnPropertyChanged("PrevButtonEnable");
             }
         }
 
-        private bool autoLaunchOption;
+        private bool _autoLaunchOption;
         public bool AutoLaunchOption
         {
             get
             {
-                return autoLaunchOption;
+                return _autoLaunchOption;
             }
 
             set
             {
-                autoLaunchOption = value;
+                _autoLaunchOption = value;
                 OnPropertyChanged("AutoLaunchOption");
             }
         }
@@ -321,96 +315,96 @@ namespace RandomPlayer.ViewModels
             }
         }
 
-        private string searchText;
+        private string _searchText;
         public string SearchText
         {
             get
             {
-                return searchText;
+                return _searchText;
             }
 
             set
             {
-                if (value != searchText)
+                if (value != _searchText)
                 {
-                    searchText = value;
+                    _searchText = value;
                     _fileSearcher.SearchText = value;
                     OnPropertyChanged("SearchText");
                 }
             }
         }
 
-        private bool enableProgressBar;
+        private bool _enableProgressBar;
         public bool EnableProgressBar
         {
             get
             {
-                return enableProgressBar;
+                return _enableProgressBar;
             }
 
             set
             {
-                enableProgressBar = value;
+                _enableProgressBar = value;
                 OnPropertyChanged("EnableProgressBar");
             }
         }
 
-        public string files;
+        public string _files;
         public string FilesLabel
         {
             get
             {
-                return files;
+                return _files;
             }
 
             set
             {
-                files = value;
+                _files = value;
                 OnPropertyChanged("FilesLabel");
             }
         }
 
-        public UserControl detailsControl;
+        public UserControl _detailsControl;
         public UserControl DetailsControl
         {
             get
             {
-                return detailsControl;
+                return _detailsControl;
             }
 
             set
             {
-                detailsControl = value;
+                _detailsControl = value;
                 OnPropertyChanged("DetailsControl");
             }
         }
         
-        public Metadata fileMetadata;
+        public Metadata _fileMetadata;
         public Metadata FileMetadata
         {
             get
             {
-                return fileMetadata;
+                return _fileMetadata;
             }
 
             set
             {
-                fileMetadata = value;
+                _fileMetadata = value;
                 OnPropertyChanged("FileMetadata");
             }
         }
 
-        public string fileSize;
+        public string _fileSize;
         public string FileSize
         {
             get
             {
-                return fileSize;
+                return _fileSize;
             }
 
             set
             {
-                fileSize = value;
+                _fileSize = value;
                 OnPropertyChanged("FileSize");
             }
         }
@@ -462,6 +456,8 @@ namespace RandomPlayer.ViewModels
 
                 SaveTool.SetSelectedFolders(SelectedFolders.ToList());
                 _fileSearcher.SourceFolders = SelectedFolders.ToList();
+
+                OnPropertyChanged("NextButtonEnable");
             }
         }
 
@@ -477,6 +473,8 @@ namespace RandomPlayer.ViewModels
 
                 SaveTool.SetSelectedFolders(SelectedFolders.ToList());
                 _fileSearcher.SourceFolders = SelectedFolders.ToList();
+
+                OnPropertyChanged("NextButtonEnable");
             }
         }
 
@@ -500,7 +498,7 @@ namespace RandomPlayer.ViewModels
         {
             if (!CheckSelectedFolders())
             {
-                CurrentFile = new FileInfo("Aucun dossier n'est sélèctionné.");
+                CurrentFile = SelectedFile.Empty;
                 return;
             }
 
@@ -511,7 +509,7 @@ namespace RandomPlayer.ViewModels
             }
 
             ClearDetails();
-            CurrentFile = GetNext();
+            CurrentFile = new SelectedFile(GetNext());
 
             LaunchButtonEnable = true;
             PrevButtonEnable = _hasFirstRead;
@@ -530,7 +528,7 @@ namespace RandomPlayer.ViewModels
         /// </summary>
         public void Launch()
         {
-            if (!CheckSelectedFolders() || CurrentFile == null)
+            if (CurrentFile == null)
                 return;
 
             try
@@ -538,11 +536,11 @@ namespace RandomPlayer.ViewModels
                 if(SelectedApplication != null && !string.IsNullOrEmpty(SelectedApplication.Executable))
                 {
                     string progamPath = RegistryTools.GetPathForExe(SelectedApplication.Executable);
-                    Process.Start(progamPath, "\"" + CurrentFile.FullName + "\"");
+                    Process.Start(progamPath, "\"" + CurrentFile.File.FullName + "\"");
                 }
                 else
                 {
-                    Process.Start(CurrentFile.FullName);
+                    Process.Start(CurrentFile.File.FullName);
                 }
             }
             catch (Exception e)
@@ -585,14 +583,15 @@ namespace RandomPlayer.ViewModels
             if (!CheckSelectedFolders() || CurrentFile == null)
                 return;
 
+            FileInfo file = CurrentFile.File;
             RenameDialogWindow rdw = new RenameDialogWindow();
-            rdw.fileName.Text = CurrentFile.Name.Replace(CurrentFile.Extension, "");
+            rdw.fileName.Text = file.Name.Replace(file.Extension, "");
             Nullable<bool> result = rdw.ShowDialog();
 
             if(result == true)
             {
-                string newName = rdw.fileName.Text + CurrentFile.Extension;
-                CurrentFile.MoveTo(Path.Combine(CurrentFile.DirectoryName, newName));
+                string newName = rdw.fileName.Text + file.Extension;
+                file.MoveTo(Path.Combine(file.DirectoryName, newName));
             }
 
             rdw.Close();
@@ -613,11 +612,11 @@ namespace RandomPlayer.ViewModels
             
             try
             {
-                File.Delete(CurrentFile.FullName);
+                File.Delete(CurrentFile.File.FullName);
                 _randomManager.DeleteCurrent();
                 _hasFirstRead = false;
 
-                CurrentFile = new FileInfo("Aucun dossier n'est sélèctionné.");
+                CurrentFile = SelectedFile.Empty;
                 LaunchButtonEnable = false;
             }
             catch (Exception e)
@@ -636,7 +635,7 @@ namespace RandomPlayer.ViewModels
             if (file == null)
                 return;
 
-            CurrentFile = file;
+            CurrentFile = new SelectedFile(file);
 
             LaunchButtonEnable = true;
             PrevButtonEnable = _randomManager.HasPrevious;
@@ -668,10 +667,10 @@ namespace RandomPlayer.ViewModels
                 return;
 
             // Get standard information
-            FileSize = FormatFileSize(CurrentFile.Length);
+            FileSize = FormatFileSize(CurrentFile.File.Length);
 
             // Gest file type
-            string ext = CurrentFile.Extension.ToLower();
+            string ext = CurrentFile.File.Extension.ToLower();
 
             if (FileExtentions.Pictures.Contains(ext))
             {
@@ -704,7 +703,7 @@ namespace RandomPlayer.ViewModels
             
             // Get media information
             FFProbe ffProbe = new FFProbe();
-            FileMetadata = new Metadata(ffProbe.GetMediaInfo(CurrentFile.FullName));
+            FileMetadata = new Metadata(ffProbe.GetMediaInfo(CurrentFile.File.FullName));
         }
 
         /// <summary>
@@ -754,6 +753,25 @@ namespace RandomPlayer.ViewModels
         private FileInfo GetNext()
         {
             return _hasFirstRead ? _randomManager.Next() : _randomManager.Current;
+        }
+
+        private void LoadSettings()
+        {
+            // Load saved selected folders
+            List<string> savedFolders = SaveTool.GetSelectedFolders();
+
+            if (savedFolders.Count > 0)
+            {
+                SelectedFolders = new ObservableCollection<string>(savedFolders);
+                _fileSearcher.SourceFolders = savedFolders;
+            }
+
+            // Load saved theme
+            _themeManager.ChangeTheme(ThemeManager.ConvertIntToThemeType(Properties.Settings.Default.ThemeType));
+
+            // Load saved file type
+            if (!string.IsNullOrEmpty(Properties.Settings.Default.SelectedType))
+                SelectedFileType = Properties.Settings.Default.SelectedType;
         }
     }
 }
