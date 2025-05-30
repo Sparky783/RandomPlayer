@@ -792,6 +792,8 @@ namespace RandomPlayer.ViewModels
             // Load saved file type
             if (!string.IsNullOrEmpty(Properties.Settings.Default.SelectedType))
                 SelectedFileType = Properties.Settings.Default.SelectedType;
+            else
+                SelectedFileType = "all";
         }
         #endregion
     }
